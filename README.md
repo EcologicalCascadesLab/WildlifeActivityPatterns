@@ -1,4 +1,4 @@
-# Wildlife Activity Pattern Analysis using Camera Trap Data in R
+# Wildlife Activity Pattern Analysis using Camera Trap Data
 
 
 This directory contain the files for the manuscript "Opposing effects of human disturbances on wildlife behaviour and the consequences for predator-prey overlap", current accepted in the journal Nature Communications.
