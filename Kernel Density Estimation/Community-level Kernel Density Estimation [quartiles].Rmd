@@ -1,0 +1,506 @@
+---
+title: "Community-level Temporal Shift Analyses (Extremes)"
+author: "Samuel Xin Tham Lee"
+date: "2023-05-23"
+output: html_document
+---
+
+Here, we will begin to analyse the community-level temporal activity of Southeast Asian wildlife. Community-level being defined as the total number of independent wildlife detections found in both intact and degraded forests. We will also be splitting the analyses into three different treatments. The first treatment considers all species present in our captures while in the second treatment, we excluded two pig species (wild boar; bearded pig) and two macaque species (pig-tailed macaques; long-tailed macaque) which constituted >50% of our total detections to test whether highly abundant species can have a influence on community-level trends. The third treatment is simply only including the two pig and macaque species to observe what time of day they are usually active.
+
+#Load the necessary packages and dataframe 
+
+```{r}
+#Set working directory
+setwd("C:/Users/AMD/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by community Sam Honours")
+
+#Load libraries
+library(plyr);library(tidyverse);library(activity);library(lubridate);library(overlap)
+
+#Load in the dataframe 
+caps = as.data.frame(read.csv("C:/Users/AMD/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by community Sam Honours/SEA_Activity_dataset_for_community_guild-level_analyses_extreme_20230523.csv"))
+
+#Inspect the dataframe
+head(caps)
+str(caps)
+names(caps)
+dim(caps)
+anyNA(caps)
+
+##Plot a FLII distribution with unique camera locations for the supplementary
+
+#Create a dataframe for plotting
+flii = ddply(caps, .(forest_integrity), summarise, total_unique_camera = length(unique(camera_id)))
+flii$status = NA
+flii$status[flii$forest_integrity < 5.61] = "degraded"
+flii$status[flii$forest_integrity > 5.61] = "intact"
+
+#Remove outliers
+sort(unique(flii$total_unique_camera)) #46 is an outlier
+flii = flii %>% filter(!total_unique_camera == "46")
+
+#Visualisation
+p = ggplot(flii, aes(x = forest_integrity, y = total_unique_camera)) +
+    geom_point(aes(color = factor(status)), position = position_jitter(0.5), alpha = 0.5) +
+    coord_cartesian(ylim = c(0,10)) +
+    scale_color_manual(values = c("degraded" = "#FC6600", "intact" = "#4169e1")) +
+    theme_classic()
+
+p
+
+#Save the plot!
+ggsave("FLII_extreme_distribution.pdf", plot = p, width = 8, height = 6, units = "in")
+
+#Keep environment clean!
+rm(flii,p)
+```
+
+Here, we will be extensively using for() loops to carry out our analyses. In general, 'Loops' are great at repeating the same functions over and over again for a given dataset.
+
+#Loop to split dataframes by the FLII Status and stored in a nested list
+
+Here, we will create dataframes for each of the treatments mentioned above and then use for() loops to split each of those dataframes by the FLII status (i.e., Intact or Degraded).
+
+```{r}
+#Create an All_species dataframe (treatment 1)
+all_species = caps
+
+#Create a dataframe without pigs and macaques (treatment 2)
+no_pigs_macaques <- filter(caps, !Species %in% c('Sus_barbatus', 'Sus_scrofa', 'Macaca_nemestrina', 'Macaca_fascicularis'))
+
+#Create a dataframe which only has pigs and macaques
+only_pigs_macaques <- filter(caps, Species %in% c('Sus_barbatus', 'Sus_scrofa', 'Macaca_nemestrina', 'Macaca_fascicularis'))
+
+```
+
+Now, we will begin the looping process.
+
+```{r}
+#First, we will need to create a vector
+unique(caps$FLII_status)
+status = c('degraded', 'intact')
+
+#Create empty lists to store results later
+all_species_list <- list()
+no_pigs_macaques_list <- list()
+only_pigs_macaques_list <- list ()
+
+#Create a for() loop to separate the two statuses into two different dataframes
+
+i=1 
+
+for (i in 1:length(status)) { #repeat for each status
+  
+  #Select a status
+  a = status[[i]]
+  
+  #Subset the dataframe by the selected status
+  b = all_species[all_species$FLII_status == a,]
+  c = no_pigs_macaques[no_pigs_macaques$FLII_status == a,]
+  d = only_pigs_macaques[only_pigs_macaques$FLII_status == a,]
+  
+  #Save the dataframe and the name of the status
+  all_species_list[[i]] = b
+  names(all_species_list)[i] = a
+  
+  no_pigs_macaques_list[[i]] = c
+  names(no_pigs_macaques_list)[i] = a
+  
+  only_pigs_macaques_list[[i]] = d
+  names(only_pigs_macaques_list)[i] = a
+}
+
+#Keep environment clean
+rm(i,a,b,c,d)
+```
+
+Now, lets store each of those lists in a nested list before running any of our analyses.
+
+```{r}
+#Store each of the lists in an overall list
+split_status <- list(no_pigs_macaques_list, only_pigs_macaques_list, all_species_list)
+
+#Keep environment clean
+rm(all_species, all_species_list, no_pigs_macaques, no_pigs_macaques_list, only_pigs_macaques, only_pigs_macaques_list)
+
+#Create names of each of the treatment
+names(split_status) <- c('no_pigs_macaques', 'only_pigs_macaques', 'all_species')
+
+#Keep environment clean!
+rm(all_species_list,no_pigs_macaques_list,only_pigs_macaques_list)
+```
+
+#Loop to create Actmod Objects for each treatment
+
+Here, we will be using the fitact() function to create Activity Model Class (Actmod) objects or simple terms, circular kernel density estimates to observe the activity pattern of each treatment. We will be using 10,000 bootstrap samples to meet current literature criteria, however, for testing purposes, it will be wise to use a lower number (e.g., 10 reps) as it can take awhile to finish.
+
+```{r}
+#Store results in empty list
+actmod.list = list()
+
+i=1;k=1
+
+for (i in 1:length(split_status)){#repeat for each treatment
+  
+  a = split_status[[i]]
+  b = names(split_status)[i]
+  
+  #Create a temporary list
+  temp = list()
+  
+  for (k in 1:length(a)) {#repeat for each status
+    
+    c = a[[k]]
+    d = names(a)[k]
+    
+    if(nrow(c) <= 100){
+      
+      act = fitact(c$time.rad, sample = "model", adj = 1, reps = 10000) 
+      
+    }else{
+      
+      act = fitact(c$time.rad, sample = "data", adj = 1, reps = 10000) 
+      
+    } #end conditional 
+    
+    #Save in temporary list
+    temp[[k]] = act
+    names(temp)[k] = d
+    
+    }
+    
+  #Save it
+  actmod.list[[i]] = temp
+  names(actmod.list)[i] = b
+  
+}
+
+#Keep environment clean!
+rm(a,b,c,d,i,k,temp,act)
+
+#Save the actmods as a RDS file
+saveRDS(actmod.list, 'SEA_Activity_community-level_actmods_extreme_20230523.RDS')
+
+```
+
+#Determining Temporal Shifts
+
+### Using CompareCkern() function to calculate p-value
+
+In the 'activity' package in r, there are various statistical significance test that we can use to calculate p-values. However, for the purposes of our research question, the more approprite test to use is the compareCkern() test as it calculates the significant difference between two circular kernel density curves. Other statistcal significance test included in the package are compareAct() ('Wald test') and the compareTime () tests. You can read more about it [here](https://www.rdocumentation.org/packages/activity/versions/1.3.2)
+
+```{r}
+#Create an empty list to save p-values later
+p_value.list <- list()
+
+i=1
+
+for (i in 1:length(actmod.list)) { #repeat for each treatment 
+  
+  a = actmod.list[[i]] #Select a single treatment
+  b = names(actmod.list)[i] #Save the name of the treatment
+  
+  #Compare activity patterns
+  c = as.data.frame(compareCkern(a[[1]], a[[2]]))
+    
+  #Add a treatment and outputs column
+  c$treatment = b
+  c$outputs = rownames(c)
+  
+  #Save it 
+  p_value.list[[i]] = c
+  names(p_value.list)[i] = b
+  
+  }
+
+#Keep environment clean!
+rm(a,b,c)
+
+#Extract outputs and covert it into a dataframe
+df = do.call(rbind, p_value.list)
+rownames(df)= NULL
+
+#Filter out the p-values and rename the p-value column
+df <- df %>% 
+  filter(outputs == "pNull") %>% 
+  rename('pNull' = 'compareCkern(a[[1]], a[[2]])') %>% 
+  select(-outputs)
+
+rm(p_value.list)
+
+```
+
+###Using the overlapEST() function to calculate overlap estimate 
+
+Here, we will be calculating the overlap estimate using the overlapEST() fucntion from the 'overlap' package. Overlap is basically the overlapping area under the two activity curves where the overlap estimate ranges from 0 to 1. We will also be using bootstrapping to calculate the 95% CI of each overlap estimate and thus can take some time to finish. 
+
+```{r}
+#Create an empty list to store results
+overlap.list = list()
+
+i=1;l=1
+
+for (i in 1:length(actmod.list)) { #repeat for each treatment
+  
+  a = actmod.list[[i]]
+  b = names(actmod.list)[i]
+  
+  c = min(length(a[[1]]@data), length(a[[2]]@data))
+  
+  if(c <= 75){ #calculate overlap estimate
+    
+    overlap.coef = overlapEst(a[[1]]@data, a[[2]]@data, adjust = 0.8, type = "Dhat1")
+    
+  }else{
+    
+    overlap.coef = overlapEst(a[[1]]@data, a[[2]]@data, adjust = 1, type = "Dhat4")
+    
+  }
+  
+  
+  if(c <= 75){ 
+    
+    overlap.boot = bootstrap(a[[1]]@data, a[[2]]@data, nb = 10000, adjust = 0.8, type = "Dhat1")
+    
+    
+  }else{
+    
+    overlap.boot = bootstrap(a[[1]]@data, a[[2]]@data, nb = 10000, adjust = 1, type = "Dhat4")
+    
+    
+  }
+  
+  overlap.CI = bootCI(overlap.coef, overlap.boot, conf = 0.95) #calculate 95% CI of overlap estimate
+  
+  d = as.data.frame(overlap.CI)
+  
+  d = d["norm0",]
+  
+  e = as.data.frame(overlap.coef)
+  
+  f = cbind(e,d)
+  
+  f$treatment = b
+  
+  overlap.list[[i]] = f
+  names(overlap.list)[i] = b
+  
+}
+
+
+#Keep environment clean!
+rm(a,b,c,d,e,f,i,l,overlap.boot,overlap.CI,overlap.coef)
+
+#Merge it with df
+a = do.call(rbind, overlap.list)
+df <- merge(df, a, by = 'treatment')
+rm(a, overlap.list)
+```
+
+###Extract peak activity within intact and degraded forests
+
+The peak activity refers to the time associated to maximum temporal activity density or in more simple terms, the time when a species/guild/community is most active. We first define a peak activity to be ‘nocturnal’, ‘diurnal’ and ‘crepuscular’ when the peak activity occurred within the night (1931 – 0429 hours; 9 hours total), day (0731 – 1629 hrs; 9 hours total) and dawn and/or dusk (0430 – 0730 hrs and/or 1630 – 1930 hrs; 6 hours total) respectively. A change of peak activity has occurred when there is a shift between 'diurnal', 'nocturnal' and 'crepuscular' hours. For instance, when a species has a peak activity at 0500 hours in intact forests while having a peak activity at 0800 hours in degraded forests, this shows that the species has shifted from crepuscular to diurnal hours, which is referred to a diurnal change in peak activities. 
+
+Firstly, we will need to 'unlist' actmod.list and create to a dataframe before extracting.
+
+```{r}
+#Unlist actmod.list
+act <- unlist(actmod.list)
+
+#Create a vector for our column names
+colnamestoextract = c("treatment", "peak_activity_radians")
+
+#Create a dataframe to fill
+empty = as.data.frame(matrix(NA,nrow = length(act),ncol = 2))
+
+#Apply the column names
+colnames(empty) = colnamestoextract
+```
+
+Here, we will use a loop to extract the peak activities in radians from each of the actmods. This is usually called a S4 model extraction.
+
+```{r}
+i=1
+
+for(i in 1:length(act)){
+  
+  a = act[[i]] #Subset a term from the list called act
+  
+  b = names(act)[i] #Save the names of the term
+  
+  empty$treatment[i] = b #Save the names of the term
+  
+  c = a@pdf #Extract the probability density function values
+  
+  d = as.data.frame(c) #Convert it into a dataframe
+  
+  e = filter(d, y == max(y)) # Remove other rows and now only contains maximum density values 
+  
+  empty$peak_activity_radians[i] = e$x # X will be the peak activity where most of our species detections (density) are found
+  
+}
+
+#Keep environment clean
+rm(a,b,c,d,e,i,colnamestoextract)
+
+```
+
+Now, we will convert radian times into our normal time format in hours: minutes: seconds and separate them by FLII status.
+
+```{r}
+# Convert peak_activity in radians to seconds
+empty <- empty %>% mutate(peak_activity_seconds = (peak_activity_radians*86400)/(2*pi))
+
+#Convert seconds into time format
+str(empty)
+empty$peak_activity_seconds <- as.integer(empty$peak_activity_seconds)
+empty <- empty %>% mutate(peak_activity = seconds_to_period(peak_activity_seconds))
+
+#Select columns that we need
+empty <- select(empty, treatment, peak_activity)
+
+#Create a dataframe with only degraded peak activities
+degraded_peak <- empty[!grepl(".intact", empty$treatment),]
+colnames(degraded_peak) <- c("treatment", "peak_activity_degraded")
+
+#Create a dataframe with only pristine peak actvities
+intact_peak <- empty[!grepl(".degraded", empty$treatment),]
+colnames(intact_peak) <- c("treatment", "peak_activity_intact")
+
+#Combine both of them!
+intact_peak <- intact_peak %>% select(-treatment)
+peak_activity <- cbind(degraded_peak, intact_peak)
+
+#Remove ".Degraded" to combine with p-values and overlaps later
+peak_activity = peak_activity %>% 
+  mutate(treatment = str_remove_all(treatment, ".degraded"))
+
+#keep environment clean
+rm(act, degraded_peak, empty, intact_peak)
+
+#Merge it with df
+df <- merge(df, peak_activity, by = 'treatment')
+
+#Save the overall results!
+write.csv(df, 'SEA_Activity_community-level_results_extreme_20230529.csv', row.names = F)
+
+#Keep environment clean
+rm(peak_activity)
+```
+
+#Visualisation of Activity Patterns
+
+Here, we will begin the process of visualizing activity curves using ggplot2(). But first, we nned to prepare the data before hand
+
+###Data preparation for visualisation
+
+We need to extract the probability distribution function (pdf) from each actmod to plot the data. As usual, we will be using loops to do this.
+
+```{r}
+#Create a empty list to store prepared data
+pdf_cov = list()
+
+i=1;k=1 #Change here to select different variables
+
+for (i in 1:length(actmod.list)) {#repeat for each treatment
+  
+  #Select a single treatment and save the name
+  a = actmod.list[[i]]
+  b = names(actmod.list)[i]
+  
+  #Create an empty dataframe store multiple activity distributions here by matching the format of the pdf 
+  c = data.frame(a[[1]]@pdf)
+  c = c[0,]
+  
+  for (k in 1:length(a)) { #repeat for each status
+    
+    #Select a single status and save the name
+    d = a[[k]]
+    e = names(a)[k]
+    
+    #Extract the probability density function 
+    f = data.frame(d@pdf)
+    f$community = b
+    f$status = e
+    
+    #save this!
+    c = rbind(c, f)
+    
+  }
+  
+  #save it!
+  pdf_cov[[i]] = c
+  names(pdf_cov)[i] = b
+}
+
+#Keep environment clean!
+rm(a,b,c,d,e,f,i,k)
+
+```
+
+###Visualisation 
+
+Feel free to adjust the themes, colours and fonts in ggplot2() to suit your taste.
+
+```{r}
+#Save the plots here
+cov_plot = list()
+
+i=2 #Change here to select a different variable
+
+for (i in 1:length(pdf_cov)) { #repeat for each treatment
+  
+  #Select a single treatment
+  a = pdf_cov[[i]]
+  b = names(pdf_cov)[i]
+  
+  #Visualise activity using ggplot
+  plot =
+    ggplot(a, aes(x=x, y=y, fill = status))+
+    geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.6)+
+    scale_x_continuous(breaks = c(0, 3.14, 6.3), 
+                       labels = c("Midnight", "Noon", "Midnight"))+
+    coord_cartesian(ylim = c(0, 0.5))+ 
+    annotate("rect", xmin = 0, xmax = 1.17, ymin = 0, ymax= c(0,0.5), color = NA, alpha = .4)+
+    annotate("rect", xmin = 1.18, xmax = 1.96, ymin = 0, ymax= c(0,0.5), color = NA, alpha = .1)+
+    annotate("rect", xmin = 4.32, xmax = 5.1, ymin = 0, ymax= c(0,0.5), color = NA, alpha = .1)+
+    annotate("rect", xmin = 5.11, xmax = 6.3, ymin = 0, ymax= c(0,0.5), color = NA, alpha = .4)+
+    theme_test()+
+    scale_fill_manual(name = a$status, values = c("#FC6600", "#4169e1"))+
+    theme(axis.title = element_blank(), axis.text = element_text(size = 16),
+          legend.position  = 'none', panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))
+  
+  #Save the plots
+  cov_plot[[i]] = plot
+  names(cov_plot)[i] = b
+  
+}
+
+#Keep environment clean
+rm(a,b,i,plot)
+```
+
+###Save the activity plots
+
+```{r}
+#Save all the plots!
+
+i=1
+
+for(i in 1:length(cov_plot)){ #repeat for each treatment
+  
+  # select a single plot from a treatment
+  a = cov_plot[[i]]
+  b = names(cov_plot)[i] #save treatment name
+  
+  path = paste0(b, "_extreme_20230529.PDF", sep = "")
+  
+  ggsave(path, a, height = 7, width = 10, units = "in")
+  
+  
+} 
+
+#Keep environment clean
+rm(a,b,path,i, cov_plot, pdf_cov)
+```

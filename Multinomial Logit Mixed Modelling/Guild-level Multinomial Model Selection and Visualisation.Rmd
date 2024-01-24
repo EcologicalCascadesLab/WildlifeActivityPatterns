@@ -1,0 +1,826 @@
+---
+title: "Guild-level Multinomial Logistic Regressions"
+author: "Samuel Xin Tham Lee"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+Here, we will begin to analyse the guild-level temporal activity of Southeast Asian wildlife. We categorise species into tropic guilds based on body size (i.e., small: <4 kg, medium: 4-20 kg, large: >20 kg) and diet (i.e., carnivore, herbivore and omnivore).  
+
+```{r setup, include=FALSE}
+## start with clean enviro
+rm(list = ls())
+
+### Set Working directories
+## Markdown requires ABSOLUTE paths, not relative paths. 
+# Adjust the code accordingly for your machine. 
+
+# set WD --> must be run in console, not code chunk! 
+setwd("C:/Users/Samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by guild [Multinomial] Sam Honours") 
+# and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/SamleDropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by guild [Multinomial] Sam Honours")
+```
+
+###Load relevant packages
+
+```{r}
+#Load libraries
+library(tidyverse);library(mclogit)
+
+```
+
+###Load and inspect the dataframe
+
+```{r}
+#Load dataframe
+caps = as.data.frame(read.csv("SEA_Activity_dataset_for_community_guild-level_analyses_20230306.csv"))
+
+#Inspect dataframe
+head(caps)
+str(caps)
+names(caps)
+anyNA(caps)
+
+```
+
+#Using Multinomial logistic Regressions Models to predict the probability of the community being nocturnal, diurnal and crepuscular
+
+Unlike binomial logistic regressions, Multinomial logistic regressions can model a categorical response variable with 2 or more outcomes. In our study, the outcomes are detections during the day, twilight and night. We will be using this model to essentially predict the probabilities of wildlife community being diurnal, crepuscular and nocturnal over a gradient of forest integrity (independent/predictor variable).
+
+But first, let's create a "landscape" column to represent our 10 landscapes across Southeast Asia. This will be treated as our random effect in our study. 
+
+```{r}
+#Check how many surveys we have!
+sort(unique(caps$survey_id))
+
+#Let's create our "landscape" column
+caps$landscape = NA
+caps$landscape[caps$survey_id == "BBS"] = "Bukit_Barisan_Selatan"
+caps$landscape[caps$survey_id %in% c("Danum_Valley_2019a", "Danum2018")] = "Danum_Valley"
+caps$landscape[caps$survey_id == "Kerinci"] = "Kerinci_Seblat"
+caps$landscape[caps$survey_id == "KhaoChong2018"] = "Khao_Chong"
+caps$landscape[caps$survey_id == "KhaoYai2019"] = "Khao_Yai"
+caps$landscape[caps$survey_id == "Lambir2017"] = "Lambir_hills"
+caps$landscape[caps$survey_id == "Leuser"] = "Gunung_Leuser"
+caps$landscape[caps$survey_id %in% c("Pasoh_TEAM_2013", "Pasoh_TEAM_2014", "Pasoh_TEAM_2015", "Pasoh_TEAM_2017")] = "Pasoh"
+caps$landscape[caps$survey_id == "Singapore"] = "Singapore"
+caps$landscape[caps$survey_id %in% c("Ulu_Muda_2015a", "Ulu_Muda_2015b", "Ulu_Muda_2015c", "Ulu_Muda_2015d", "Ulu_Muda_2016a", "Ulu_Muda_2016b", "Ulu_Muda_2016c")] = "Ulu_Muda"
+
+#Check whether there is 10 landscapes
+sort(unique(caps$landscape))
+
+#Check whether there is "NA"
+anyNA(caps$landscape) #good
+
+#set the landscape column as a factor
+caps$landscape = as.factor(caps$landscape)
+str(caps) #great!
+
+```
+
+###Defining the temporal categorisations ("outcomes"): Day, Twilight and Night
+
+Here, we will be defining our detections based on the time of day. We define "day" detections as being detections found between 0731 hr to 1629 hr, "twilight" detections as being detections found between 0430 hr to 0730 hr or 1630 hr to 1930 hr, and lastly "night" detections as being detections found between 1931hr to 0429 hr.
+
+```{r}
+#Include the respective time of day categories
+caps$time_of_day = "NA"
+caps$time_of_day[caps$time.rad >= 5.109451 | caps$time.rad <= 1.178096] = "night"
+caps$time_of_day[caps$time.rad >= 1.967859 & caps$time.rad <= 4.319689] = "day"
+caps$time_of_day[caps$time_of_day == "NA"] = "twilight"
+sort(unique(caps$time_of_day))
+
+#Set the time of day column as a factor
+caps$time_of_day = as.factor(caps$time_of_day)
+str(caps) #great!
+
+#"Twilight" category as baseline category
+caps$time_of_day <- relevel(caps$time_of_day, ref = "twilight")
+```
+
+###Reverse forest integrity from 10 to 0 and rename it to "disturbance_index"
+
+```{r}
+#Reverse forest integrity
+caps$disturbance_index <- max(caps$forest_integrity) - caps$forest_integrity
+```
+
+###Loop to subset trophic guild dataframes and store it in an empty list
+
+```{r}
+#Create an empty to list to store guild dataframes
+guild.list = list()
+
+#Create guild vector for looping
+guilds = sort(unique(caps$trophic_guild))
+
+i=1
+
+for (i in seq_along(guilds)) {#repeat for each guild
+  
+  #Select a guild
+  a = guilds[[i]]
+   
+  #Subset the trophic guild
+  b = caps[caps$trophic_guild == a,]
+  
+  #Save it
+  guild.list[[i]] = b
+  names(guild.list)[i] = a
+  
+}
+
+#Keep environment clean
+rm(i,a,b)
+```
+
+###Loop to build the Multinomial Logistic Regression Model with one random effect using "mclogit" package and store it in an empty list
+
+This package allows for the inclusion of random effects.
+
+Guidelines for building the multinomial equation using mblogit():
+
+*random = random effects (~1 | Your random effect)
+
+*estimator = Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML)
+
+*dispersion = "Afroz", "Fletcher", "Pearson"
+
+*method = "PQL" or "MQL"
+
+```{r}
+#Create an empty list to store the models
+guild.models = list()
+
+i=1
+
+for (i in seq_along(guild.list)) {#repeat for each guild
+  
+  #Select a guild
+  a = guild.list[[i]]
+  b = names(guild.list)[i] #save the name of the guild
+  
+  #Build the multinomial model
+  c = mblogit(time_of_day ~ disturbance_index, random = ~1 | landscape, data = a, estimator = "REML", dispersion = "Afroz", method = "PQL")
+  
+  #Save the models
+  guild.models[[i]] = c
+  names(guild.models)[i] = b
+}
+
+#Keep environemnt clean
+rm(a,b,c,i)
+
+```
+
+###Loop to extract the p-value and estimates for each model and store it in a dataframe
+
+We will be extracting the summary statistics of "night vs day" and "twilight vs day" under the effect of forest integrity for visualization later.
+
+```{r}
+#Create an empty dataframe
+sum_stats_extracted = data.frame()
+
+i=1
+
+for (i in seq_along(guild.models)) {#repeat for each model
+  
+  a = guild.models[[i]]#select a model
+  b = names(guild.models)[i]#save the name of the model
+  
+  c = summary(a)#obtain the summary statisctics
+  d = as.data.frame(c$coefficients)#subset the coefficients
+  
+  #Thin the summary statistics to the ones we want
+  d$formula = row.names(d)
+  d$trophic_guild = b
+  d = d %>% 
+    dplyr::rename("p_value" = "Pr(>|z|)", "estimates" = "Estimate") 
+    
+  
+  sum_stats_extracted = rbind(sum_stats_extracted,d) #save it
+  
+}
+
+#keep environment clean
+rm(a,b,c,d,i)
+
+#Save it!
+write.csv(sum_stats_extracted, "guild-level_sumstats_[landscape_only]_20231005.csv", row.names = F)
+```
+
+###Visualising the Multinomial Regression Models
+
+Visualising mixed effects models can yield very jagged and sporadic plots that do not look nice. Here, we will generate an overall trend line for each diel category ("day", "twilight", and "night") by averaging or overlaying the predicted probabilities of each diel category from each landscape which will look smooth.
+
+#####Loop to calculate the predicted probabilities for each model and store it in an empty list
+
+```{r}
+#Create an empty list
+guild.predicted_probs = list()
+
+i=1
+
+for (i in names(guild.list)) {
+  
+  a = guild.list[[i]] #Select the dataframe by name
+  
+  #Your existing code for newdata generation
+  newdata <- expand.grid(disturbance_index = seq(min(a$disturbance_index), max(a$disturbance_index), length.out = 100), landscape = unique(a$landscape))
+  
+  #Get the model directly by the same name
+  b = guild.models[[i]]
+  
+  #Calculate predicted probabilities
+  predictions <- predict(b, newdata = newdata, type = "response")
+  newdata <- cbind(newdata, predictions) 
+  
+  #Save the predicted probs
+  guild.predicted_probs[[i]] = newdata
+  
+}
+
+#keep environment clean!
+rm(a,b,predictions,i,newdata)
+```
+
+#####Loop to compute smoothed/average values and store it in an empty list 
+
+```{r}
+#Create an empty list to store smoothed/average values
+guild.smooth_values = list()
+
+i = 1; k = "day";l = "Pasoh"
+
+for (i in seq_along(guild.predicted_probs)) {#repeat for each predicted probability dataframe
+  
+  a = guild.predicted_probs[[i]] #select a dataframe
+  b = names(guild.predicted_probs)[i] #save the name of the dataframe
+  
+  #Create a dataframe to be filled with smoothed/averaged values
+  smoothed_vals <- data.frame(disturbance_index = unique(a$disturbance_index)) 
+  
+  for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero
+    smoothed_vals[[k]] <- 0 
+    
+    for (l in unique(a$landscape)) {#repeat for each unique landscape
+      
+      #fit a smooth curve to predict a specific time of day (like "day" or "night") based on disturbance index
+      loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset(a, landscape == l))
+      
+      #get the expected values (predictions) for a specific time of day (like "day") based on various   disturbance index values and adding them up for each landscape. Later, this accumulated total will be averaged out to show the general trend  
+      smoothed_vals[[k]] <- smoothed_vals[[k]] + predict(loess_fit, newdata = data.frame(disturbance_index = smoothed_vals$disturbance_index))
+      
+    }
+    
+    #Average the smoothed values
+    smoothed_vals[[k]] <- smoothed_vals[[k]] / length(unique(a$landscape))
+    
+    #Add trophic guild column for merging later
+    smoothed_vals$trophic_guild = b
+
+  }
+  
+  #save the smoothed values
+  guild.smooth_values[[i]] = smoothed_vals
+  names(guild.smooth_values)[i] = b
+  
+}
+
+#keep environment clean!
+rm(i,k,l,a,b,loess_fit,smoothed_vals)
+
+```
+
+#####Loop to compute the standard errors of smoothed/average values and store it in an empty list
+
+```{r}
+#Create an empty list to store the standard errors
+guild.SE = list()
+
+i = 1; k = "day"; l = "0.00"; u = "Pasoh"
+
+for (i in seq_along(guild.predicted_probs)) {#repeat for each predicted probabilities dataframe
+  
+  a = guild.predicted_probs[[i]] #select a dataframe
+  b = names(guild.predicted_probs)[i] #save the name
+  
+  #Create a dataframe to be filled with standard errors
+  se_data <- data.frame(disturbance_index = unique(a$disturbance_index))
+  
+  for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero to store standard errors
+    se_data[[paste(k, "se", sep = "_")]] <- NA
+    
+    for (l in unique(a$disturbance_index)) {#repeat for each unique value of forest integrity
+      
+      #creates a list of zeros, one for each unique landscape, to store the predicted values (from the smooth curve) for that particular disturbance index and time of day.
+        smoothed_values_for_fi <- numeric(length = length(unique(a$landscape)))
+        
+        for (u in seq_along(unique(a$landscape))) {#repeat for each landscape
+          
+          #fits a smooth curve, using only data from the current landscape
+          loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset(a, landscape == unique(a$landscape)[u]))
+          
+          #predicts the time of day (like "day") for the current disturbance index value using the smooth curve from the previous step. It stores this predicted value in our list of zeros from earlier.
+            smoothed_values_for_fi[u] <- predict(loess_fit, newdata = data.frame(disturbance_index = l))
+          
+        }
+      #calculate the standard error of each prediction for each landsape at each unique forest integrity value for each diel category
+        se_data[se_data$disturbance_index == l, paste(k, "se", sep = "_")] <- sd(smoothed_values_for_fi) / sqrt(length(smoothed_values_for_fi))
+        
+        #Add trophic guild column for merging later
+        se_data$trophic_guild = b
+    }
+  }
+  
+  #Save the  final results!
+  guild.SE[[i]] = se_data
+  names(guild.SE)[i] = b
+  
+}
+
+#keep environment clean
+rm(a,b,i,k,l,smoothed_values_for_fi,u,se_data,loess_fit)
+
+```
+
+#####Merging the smoothed values and standard errors
+
+```{r}
+#Rbind the list using do.call function
+smoothed_vals = do.call(rbind, guild.smooth_values)
+se_data = do.call(rbind, guild.SE)
+
+#Merge them
+df = merge(smoothed_vals, se_data, by = c("trophic_guild", "disturbance_index"))
+rm(smoothed_vals,se_data)
+
+#Split them by trophic guild and store in a list again
+guild.visuals = list()
+
+i=1
+
+for (i in seq_along(guilds)) {#repeat for each trophic guild
+  
+   #Select a guild
+  a = guilds[[i]]
+   
+  #Subset the trophic guild
+  b = df[df$trophic_guild == a,]
+  
+  #Save it
+  guild.visuals[[i]] = b
+  names(guild.visuals)[i] = a
+  
+  
+ 
+}
+
+#keep environment clean
+rm(i,a,b,df)
+```
+
+#####Loop to visualise the plots for each trophic guild
+
+```{r}
+#Create an empty list to store plots
+guild.plots = list()
+
+##Create a lookup fucntion to determine the linetype based on p-value by looking up which trophic guild and diel category
+
+#create function to determine linetype (dashed or solid) based on p-value
+lookup_linetype <- function(guild, category) {
+  
+  #Fetch the relevant p-value
+  p_val <- sum_stats_extracted %>%
+    filter(trophic_guild == guild, formula == paste0(category, "~disturbance_index")) %>%
+    pull(p_value)
+  
+  # Check if the extracted value is empty or not
+  if (length(p_val) == 0) {
+    stop(paste("No matching rows found for guild:", guild, "and category:", category))
+  }
+  
+  #Return the linetype based on the p-value
+  return(ifelse(p_val > 0.05, "dashed", "solid"))
+}
+
+#Loop to visualise
+
+i=1
+
+for(i in names(guild.visuals)) {
+  
+  data <- guild.visuals[[i]]
+  
+  #Apply function
+  linetype_day <- lookup_linetype(i, "day")
+  linetype_night <- lookup_linetype(i, "night")
+  
+  
+    plot <- ggplot(data, aes(x = disturbance_index)) + 
+    
+    #plot the "day" category
+    geom_line(aes(y = day, color = "Day"), size = 1.5, linetype = linetype_day) + 
+    geom_ribbon(aes(ymin = day - 1.96 * day_se, ymax = day + 1.96 * day_se, fill = "Day"), alpha = 0.2) +
+    
+    #plot the "twilight" category
+    #geom_line(aes(y = twilight, color = "Twilight"), linetype = linetype_twilight, size = 1.5) +
+    geom_ribbon(aes(ymin = twilight - 1.96 * twilight_se, ymax = twilight + 1.96 * twilight_se, fill = "Twilight"), alpha = 0.2) +
+    
+    #plot the "night" category
+    geom_line(aes(y = night, color = "Night"), linetype = linetype_night, size = 1.5) +
+    geom_ribbon(aes(ymin = night - 1.96 * night_se, ymax = night + 1.96 * night_se, fill = "Night"), alpha = 0.2) +
+    #Choose appropriate colours
+    scale_color_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+    scale_fill_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+      
+    #fixed the range of the y-axis
+    coord_cartesian(ylim = c(0.0, 1.0)) +  
+      
+    #Add axis titles
+    labs(x = "Disturbance Index", y = "Mean Predicted Probability") +
+    theme_classic()
+    
+    
+    #save the plots
+    guild.plots[[i]] <- plot
+}
+
+#keep environment clean
+rm(data, i,linetype_night,linetype_day, plot)
+```
+
+#####Loop to save the plots in your working directory
+
+```{r}
+i=1
+
+for (i in seq_along(guild.plots)) {#repeat for each plot
+  
+  a = guild.plots[[i]] #select a plot
+  
+  b = names(guild.plots)[i] #save the name
+  
+  ggsave(paste(b, "_[landscape_only]_20230914.PDF"), plot = a, width = 8, height = 6, units = "in")
+  
+}
+
+#keep environment clean
+rm(a,b,i)
+```
+
+#Model building using two random effects (i.e., species and landscape)
+
+###Building the Multinomial Logistic Regression Model with two random effects using "mclogit" package
+
+This package allows for the inclusion of random effects. For these models, we will use two random effects, namely landscape and species.
+
+Guidelines for building the multinomial equation using mblogit():
+
+*random = random effects (e.g., c(~1 | Your first random effect, ~1 | Your second random effect))
+
+*estimator = Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML)
+
+*dispersion = "Afroz", "Fletcher", "Pearson"
+
+*method = "PQL" or "MQL"
+
+```{r}
+#Create an empty list to store the models
+guild.models = list()
+
+i=1
+
+for (i in seq_along(guild.list)) {#repeat for each guild
+  
+  #Select a guild
+  a = guild.list[[i]]
+  b = names(guild.list)[i] #save the name of the guild
+  
+  #Build the multinomial model
+  c = mblogit(time_of_day ~ disturbance_index, random = c(~1 | landscape, ~1 | Species), data = a, estimator = "REML", dispersion = "Afroz", method = "PQL")
+  
+  #Save the models
+  guild.models[[i]] = c
+  names(guild.models)[i] = b
+}
+
+#Keep environemnt clean
+rm(a,b,c,i)
+```
+
+###Extract the p-value and estimates of each model and store it in an empty list
+
+```{r}
+#Create an empty dataframe
+sum_stats_extracted = data.frame()
+
+i=1
+
+for (i in seq_along(guild.models)) {#repeat for each model
+  
+  a = guild.models[[i]]#select a model
+  b = names(guild.models)[i]#save the name of the model
+  
+  c = summary(a)#obtain the summary statisctics
+  d = as.data.frame(c$coefficients)#subset the coefficients
+  
+  #Thin the summary statistics to the ones we want
+  d$formula = row.names(d)
+  d$trophic_guild = b
+  d = d %>% 
+    dplyr::rename("p_value" = "Pr(>|z|)", "estimates" = "Estimate") 
+    
+  
+  sum_stats_extracted = rbind(sum_stats_extracted,d) #save it
+  
+}
+
+#keep environment clean
+rm(a,b,c,d,i)
+
+#Save it!
+write.csv(sum_stats_extracted, "guild-level_sumstats_[landscape_species]_20231005.csv", row.names = F)
+```
+
+###Visualising the Multinomial Regression Models
+
+#####Loop to calculate the predicted probabilities for each model and store it in an empty list
+
+```{r}
+#Create an empty list
+guild.predicted_probs = list()
+
+i=1
+
+for (i in names(guild.list)) {
+  
+  a = guild.list[[i]] #Select the dataframe by name
+  
+  #Your existing code for newdata generation
+  newdata <-  expand.grid(
+  disturbance_index = seq(min(a$disturbance_index), max(a$disturbance_index), length.out = 100),
+  landscape = unique(a$landscape),
+  Species = unique(a$Species))
+  
+  #Get the model directly by the same name
+  b = guild.models[[i]]
+  
+  #Calculate predicted probabilities
+  predictions <- predict(b, newdata = newdata, type = "response")
+  newdata <- cbind(newdata, predictions) 
+  
+  #Save the predicted probs
+  guild.predicted_probs[[i]] = newdata
+  
+}
+
+#keep environment clean!
+rm(a,b,predictions,i,newdata)
+```
+
+#####Loop to compute smoothed/average values and store it in an empty list 
+
+```{r}
+#Create an empty list to store smoothed/average values
+guild.smooth_values = list()
+
+i = 1; k = "day";l = "Pasoh"; s = "Macaca_nemestrina"
+
+for (i in seq_along(guild.predicted_probs)) {#repeat for each predicted probability dataframe
+  
+  a = guild.predicted_probs[[i]] #select a dataframe
+  b = names(guild.predicted_probs)[i] #save the name of the dataframe
+  
+  #Create a dataframe to be filled with smoothed/averaged values
+  smoothed_vals <- data.frame(disturbance_index = unique(a$disturbance_index)) 
+  
+  for (k in c("day", "twilight", "night")) { # Repeat for each diel category
+
+  # Set the columns of each diel category to zero
+  smoothed_vals[[k]] <- 0
+
+  for (l in unique(a$landscape)) { # Repeat for each unique landscape
+    
+    for (s in unique(a$Species)) { # Repeat for each unique Species
+      
+      # Subset the data for the current landscape and Species
+      subset_data <- subset(a, landscape == l & Species == s)
+
+      # Fit a smooth curve to predict a specific time of day (like "day" or "night") based on disturbance index
+      loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset_data)
+
+      # Get the expected values (predictions) for a specific time of day (like "day") based on various disturbance index values
+      smoothed_vals[[k]] <- smoothed_vals[[k]] + predict(loess_fit, newdata = data.frame(disturbance_index = smoothed_vals$disturbance_index))
+    }
+    
+    #Average the smoothed values for the current landscape
+    smoothed_vals[[k]] <- smoothed_vals[[k]] / length(unique(a$Species))
+    
+    #Add "trophic_guild" column
+    smoothed_vals$trophic_guild = b
+  }
+}
+  
+  #save the smoothed values
+  guild.smooth_values[[i]] = smoothed_vals
+  names(guild.smooth_values)[i] = b
+  
+}
+
+#keep environment clean!
+rm(i,k,l,a,b,s,loess_fit,smoothed_vals,subset_data)
+
+```
+
+#####Loop to compute the standard errors of smoothed/average values and store it in an empty list
+
+```{r}
+#Create an empty list to store the standard errors
+guild.SE = list()
+
+i = 1; k = "day"; l = "0.00"; u = "Pasoh"; s = "Macaca_nemestrina"
+
+for (i in seq_along(guild.predicted_probs)) {#repeat for each predicted probabilities dataframe
+  
+  a = guild.predicted_probs[[i]] #select a dataframe
+  b = names(guild.predicted_probs)[i] #save the name
+  
+  #Create a dataframe to be filled with standard errors
+  se_data <- data.frame(disturbance_index = unique(a$disturbance_index))
+  
+  for (k in c("day", "twilight", "night")) { # Repeat for each diel category
+
+  # Set the columns of each diel category to zero to store standard errors
+  se_data[[paste(k, "se", sep = "_")]] <- NA
+
+  for (l in unique(a$disturbance_index)) { # Repeat for each unique value of forest integrity
+    
+    # Create a list to store smoothed values for the current disturbance index value and diel category
+    smoothed_values_for_fi <- numeric(length = length(unique(a$landscape) * unique(a$Species)))
+
+    for (u in seq_along(unique(a$landscape))) { # Repeat for each landscape
+
+      for (s in seq_along(unique(a$Species))) { # Repeat for each Species
+        
+        # Subset the data for the current landscape and Species
+        subset_data <- subset(a, landscape == unique(a$landscape)[u] & Species == unique(a$Species)[s])
+        
+        # Fit a smooth curve using only data from the current landscape and Species
+        loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset_data)
+
+        # Predict the time of day (like "day") for the current disturbance index value using the smooth curve
+        smoothed_values_for_fi[u + (s - 1) * length(unique(a$landscape))] <- predict(loess_fit, newdata = data.frame(disturbance_index = l))
+      }
+    }
+    
+    # Calculate the standard error of each prediction for each landscape at each unique forest integrity value for each diel category
+    se_data[se_data$disturbance_index == l, paste(k, "se", sep = "_")] <- sd(smoothed_values_for_fi) / sqrt(length(smoothed_values_for_fi))
+    
+    #Add "trophic_guild" column
+    se_data$trophic_guild = b
+  }
+}
+  
+  #Save the  final results!
+  guild.SE[[i]] = se_data
+  names(guild.SE)[i] = b
+  
+}
+
+#keep environment clean
+rm(a,b,i,k,l,s,smoothed_values_for_fi,u,se_data,loess_fit, subset_data)
+
+```
+
+#####Merging the smoothed values and standard errors
+
+```{r}
+#Rbind the list using do.call function
+smoothed_vals = do.call(rbind, guild.smooth_values)
+se_data = do.call(rbind, guild.SE)
+
+#Merge them
+df = merge(smoothed_vals, se_data, by = c("disturbance_index", "trophic_guild"))
+rm(smoothed_vals,se_data)
+
+#Split them by trophic guild and store in a list again
+guild.visuals = list()
+
+i=1
+
+for (i in seq_along(guilds)) {#repeat for each trophic guild
+  
+   #Select a guild
+  a = guilds[[i]]
+   
+  #Subset the trophic guild
+  b = df[df$trophic_guild == a,]
+  
+  #Save it
+  guild.visuals[[i]] = b
+  names(guild.visuals)[i] = a
+  
+  
+ 
+}
+
+#keep environment clean
+rm(i,a,b,df)
+```
+
+#####Loop to visualise the plots for each trophic guild
+
+```{r}
+#Create an empty list to store plots
+guild.plots = list()
+
+##Create a lookup fucntion to determine the linetype based on p-value by looking up which trophic guild and diel category
+
+#create function to determine linetype (dashed or solid) based on p-value
+lookup_linetype <- function(guild, category) {
+  
+  #Fetch the relevant p-value
+  p_val <- sum_stats_extracted %>%
+    filter(trophic_guild == guild, formula == paste0(category, "~disturbance_index")) %>%
+    pull(p_value)
+  
+  # Check if the extracted value is empty or not
+  if (length(p_val) == 0) {
+    stop(paste("No matching rows found for guild:", guild, "and category:", category))
+  }
+  
+  #Return the linetype based on the p-value
+  return(ifelse(p_val > 0.05, "dashed", "solid"))
+}
+
+#Loop to visualise
+
+i=1
+
+for(i in names(guild.visuals)) {
+  
+  data <- guild.visuals[[i]]
+  
+  #Apply function
+  linetype_day <- lookup_linetype(i, "day")
+  linetype_night <- lookup_linetype(i, "night")
+  
+  
+    plot <- ggplot(data, aes(x = disturbance_index)) + 
+    
+    #plot the "day" category
+    geom_line(aes(y = day, color = "Day"), size = 1.5, linetype = linetype_day) + 
+    geom_ribbon(aes(ymin = day - 1.96 * day_se, ymax = day + 1.96 * day_se, fill = "Day"), alpha = 0.2) +
+    
+    #plot the "twilight" category
+    #geom_line(aes(y = twilight, color = "Twilight"), linetype = linetype_twilight, size = 1.5) +
+    geom_ribbon(aes(ymin = twilight - 1.96 * twilight_se, ymax = twilight + 1.96 * twilight_se, fill = "Twilight"), alpha = 0.2) +
+    
+    #plot the "night" category
+    geom_line(aes(y = night, color = "Night"), linetype = linetype_night, size = 1.5) +
+    geom_ribbon(aes(ymin = night - 1.96 * night_se, ymax = night + 1.96 * night_se, fill = "Night"), alpha = 0.2) +
+    #Choose appropriate colours
+    scale_color_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+    scale_fill_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+      
+    #fixed the range of the y-axis
+    coord_cartesian(ylim = c(0.0, 1.0)) +  
+      
+    #Add axis titles
+    labs(x = "Disturbance Index", y = "Mean Predicted Probability") +
+    theme_classic()
+    
+    
+    #save the plots
+    guild.plots[[i]] <- plot
+}
+
+#keep environment clean
+rm(data, i,linetype_night,linetype_day, plot)
+```
+
+#####Loop to save the plots in your working directory
+
+```{r}
+i=1
+
+for (i in seq_along(guild.plots)) {#repeat for each plot
+  
+  a = guild.plots[[i]] #select a plot
+  
+  b = names(guild.plots)[i] #save the name
+  
+  ggsave(paste(b, "_[landscape_species]_20231003.PDF"), plot = a, width = 8, height = 6, units = "in")
+  
+}
+
+#keep environment clean
+rm(a,b,i)
+```
+

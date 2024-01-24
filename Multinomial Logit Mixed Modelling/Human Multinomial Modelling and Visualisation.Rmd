@@ -1,0 +1,475 @@
+---
+title: "Human activity across Southeast Asia using Multinomial Logistic Regressions"
+author: "Samuel Xin Tham Lee"
+date: "2023-09-18"
+output: html_document
+---
+
+Here, we will begin to analyse human activity across Southeast Asia.  
+
+```{r setup, include=FALSE}
+## start with clean enviro
+rm(list = ls())
+
+### Set Working directories
+## Markdown requires ABSOLUTE paths, not relative paths. 
+# Adjust the code accordingly for your machine. 
+
+# set WD --> must be run in console, not code chunk! 
+setwd("C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift humans [Multinomial] Sam Honours") 
+# and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift humans [Multinomial] Sam Honours")
+```
+
+#Load the relevant libraries
+
+If you haven't download any of the packages, you can use the install.packages() function in r.
+
+```{r}
+library(tidyverse) 
+library(sp) 
+library(activity)
+library(overlap)
+library(plyr)
+library(mclogit)
+```
+
+#Load the relevant dataframe
+
+```{r}
+caps = as.data.frame(read.csv("ECL captures summer spp projects_20210322.csv"))
+```
+
+#Subset human captures
+
+```{r}
+#Check how many human designations
+sort(unique(caps$Species))
+
+#All humans have "Homo_sapiens" designations (There are 6 of them)
+#Use this pattern to subset
+human_caps = subset(caps, grepl("Homo_sapiens", caps$Species))#looks good
+rm(caps)
+```
+
+#Accounting for daylength variation
+
+Here, we will be using camera coordinates and Suntime () function to take into account of daylength variation. Since SEA is near the equator, it would not vary that much but its good practice to do this!
+The radian time produced is a relative value of both sunset and sunrise hours. For instance, if a certain camera location has a sunrise time of 0630 hr, the Suntime () function will regard it as 1.57 rad and vice versa for sunset time (4.71 rad). 
+
+### Organizing camera coordinates for each camera trap survey
+
+Since we are dealing with multiple surveys, there will be multiple time zones and therefore we need to split the dataset based on each survey's respective time zones.
+
+```{r}
+#Load in the metadata which contains the camera coordinates
+ECL_metadata = as.data.frame(read.csv("ECL and Collaborator Camera Trap Metadata_20220802.csv"))
+
+#Check what columns are present
+sort(names(ECL_metadata))
+
+#Check the Landscape column 
+sort(unique(ECL_metadata$Landscape))
+
+#Select the columns we need and filter out the countries we do not need
+ECL_metadata = ECL_metadata %>% 
+  select(camera_id, survey_id, Landscape, Longitude, Latitude) %>% 
+  filter(Landscape %in% c('Bukit_Barisan_Selatan_National_Park', 'Danum_Valley_Conservation_Area', 'Gunung_Leuser_National_Park', 'Khao_Yai_National_Park', 'Lambir_Hills_National_Park', 'Singapore', 'Ulu_Muda_Forest_Reserve', 'Pasoh_Forest_Reserve', 'Kerinci_Seblat_National_Park')) 
+```
+
+After sorting through the metadata, we are still missing camera coordinates from the ECL survey done in Khao Chong in 2018. Here, we will incorporate these missing coordinates from another metadata file.
+
+```{r}
+#Load in the second metadata file
+ECL_metadata_2 = as.data.frame(read.csv("Full_Metadata_by_Camera.csv"))
+
+#Check what columns are present
+names(ECL_metadata_2)
+
+#Select columns that we need and only obtain the data for KhaoChong2018 survey
+ECL_metadata_2 = ECL_metadata_2 %>% 
+  select(camera_id, survey_id, Y_lat, X_long) %>% 
+  filter(survey_id == 'KhaoChong2018.ECL')
+
+#Rename the survey_id and camera_id to match those found in the ECL_metadata dataframe
+ECL_metadata_2 = ECL_metadata_2 %>% 
+  mutate(survey_id = str_remove_all(survey_id, ".ECL")) %>% 
+  mutate(camera_id = str_remove_all(camera_id, "KhaoChong2018.ECL.")) %>% 
+  select(camera_id, survey_id, Y_lat, X_long)
+
+#Remove Landscape column from the ECL_metadata dataframe so that we can rbind both metadatas together
+ECL_metadata = ECL_metadata %>% 
+  select(-Landscape)
+
+#Change column names of ECL_metadata_2 to match those of ECL_metadata
+colnames(ECL_metadata_2) = c("camera_id", "survey_id", "Latitude", "Longitude")
+
+#rbind both metadatas
+ECL_metadata <- rbind(ECL_metadata, ECL_metadata_2)
+
+#Remove ECL_metadata_2 to keep environment clean
+rm(ECL_metadata_2)
+```
+
+Before proceeding to next part, let us compare both the captures dataframe and the ECL_metadata dataframe to check whether all cameras are accounted for.
+
+```{r}
+setdiff(human_caps$camera_id, ECL_metadata$camera_id) #Check whether all cameras are accounted for
+```
+
+Unfortunately, five camera coordinates are still missing, namely "SR4_sorted", "SR5_sorted", "LM201-CAM68", "LM198_CAM35", "C13_sorted" and "SR9_sorted". However, we have asked our collaborator, Mr. Jonathan Moore, who had assisted in setting up those cameras to provide the coordinates.
+
+```{r}
+#Load in last remaining coordinates given by Jon and combined it with ECL_metadata dataframe
+ECL_metadata_3 <- as.data.frame(read.csv("ECL_missing_coordinates_20221103.csv"))
+ECL_metadata <- rbind(ECL_metadata, ECL_metadata_3)
+
+#Missing coordinates for SR4_sorted (remove it --- only two observations)
+human_caps = human_caps %>% filter(!camera_id == "SR4_sorted")
+
+#Lets remove ECL_metadata_3 to keep environment clean
+rm(ECL_metadata_3)
+```
+
+Now, we will merge the ECL_metadata dataframe with the captures dataframe.
+
+```{r}
+#Remove survey_id from ECL_metadata as the names do not match those in the captures dataframe
+ECL_metadata <- ECL_metadata %>% 
+  select(-survey_id)
+
+#Merge captures and camera coordinates into one single dataset
+human_caps <- merge(human_caps, ECL_metadata, by = 'camera_id')
+```
+
+###Using the SunTime () function
+
+####Thailand surveys
+
+```{r}
+#Select Thailand surveys
+thai <-  filter(human_caps, survey_id %in% c('KhaoYai2019', 'KhaoChong2018'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(thai$Photo.Time, format = "%H:%M:%S", scale = c("radian"))
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(thai$Photo.Date, tz= "Asia/Bangkok", format = '%d/%m/%Y')
+
+# Create a SpatialPoints object with the location
+coords <- data.frame(thai$Longitude,thai$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+ 
+#Merge it with main thailand dataset
+thai$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+Now, we do the same for all the other surveys (i.e., Malaysia, Sumatra, Sinagpore)
+
+####Malaysian and Singapore surveys
+
+```{r}
+#Select Malaysian and Singapore surveys 
+my_sg <-  filter(human_caps, survey_id %in% c('Danum_Valley_2019a', 'Danum2018', 'Lambir2017', 'Pasoh_TEAM_2013', 'Pasoh_TEAM_2014', 'Pasoh_TEAM_2015', 'Pasoh_TEAM_2017', 'Singapore', 'Ulu_Muda_2015a', 'Ulu_Muda_2015b',
+'Ulu_Muda_2015c', 'Ulu_Muda_2015d', 'Ulu_Muda_2016a', 'Ulu_Muda_2016b', 'Ulu_Muda_2016c'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(my_sg$Photo.Time, format = "%H:%M:%S", scale = c("radian")) 
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(my_sg$Photo.Date, tz= "Asia/Singapore", format = '%d/%m/%Y')
+
+# Create a SpatialPoints object with the location
+coords <- data.frame(my_sg$Longitude,my_sg$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+
+#Merge it with main peninsular and singapore dataset
+my_sg$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+####Sumatran surveys
+
+```{r}
+#Select sumatran surveys
+sum <- filter(human_caps, survey_id %in% c('BBS', 'Kerinci', 'Leuser'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(sum$Photo.Time, format = "%H:%M:%S", scale = c("radian")) 
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(sum$Photo.Date, tz= "Asia/Jakarta", format = '%d/%m/%Y')
+
+#Create a SpatialPoints object with the location
+coords <- data.frame(sum$Longitude,sum$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+
+#Merge it with main sumatra dataset
+sum$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+Now, let us merge all the respective time zones together!
+
+```{r}
+#Rbind the datasets together
+human_caps <- rbind(my_sg, thai)
+human_caps <- rbind(human_caps, sum)
+
+#Keep environment clean!
+rm(my_sg, sum, thai, ECL_metadata)
+```
+
+#Including the disturbance proxy: Forest Landscape Integrity Index (FLII)
+
+Here, we will include the forest landscape integrity index (FLII) at each of our camera locations. The FLII values can be extracted from the [FLII database](https://www.forestintegrity.com/) 
+
+```{r}
+#Load in covariate dataset
+covs <- as.data.frame(read.csv("ECL_metadata_cam_level_summer_spp_20210322.csv"))
+names(covs)
+head(covs)
+
+#Filter out other covariates and only include FLII
+covs <- covs %>% select(camera_id, survey_id, forest_integrity)
+
+#Merge forest integrity with human captures
+human_caps = merge(human_caps, covs, by = c("camera_id", "survey_id"))
+rm(covs)
+
+#Save it for future use
+write.csv(human_caps, "SEA_Activity_human_captures_20230918.csv", row.names = F)
+```
+
+#Using Multinomial logistic Regressions Models to predict the probability of the community being nocturnal, diurnal and crepuscular
+
+Unlike binomial logistic regressions, Multinomial logistic regressions can model a categorical response variable with 2 or more outcomes. In our study, the outcomes are detections during the day, twilight and night. We will be using this model to essentially predict the probabilities of wildlife community being diurnal, crepuscular and nocturnal over a gradient of forest integrity (independent/predictor variable).
+
+But first, let's create a "landscape" column to represent our 10 landscapes across Southeast Asia. This will be treated as our random effect in our study. 
+
+```{r}
+#Check how many surveys we have!
+sort(unique(human_caps$survey_id))
+
+#Let's create our "landscape" column
+human_caps$landscape = NA
+human_caps$landscape[human_caps$survey_id == "BBS"] = "Bukit_Barisan_Selatan"
+human_caps$landscape[human_caps$survey_id %in% c("Danum_Valley_2019a", "Danum2018")] = "Danum_Valley"
+human_caps$landscape[human_caps$survey_id == "Kerinci"] = "Kerinci_Seblat"
+human_caps$landscape[human_caps$survey_id == "KhaoChong2018"] = "Khao_Chong"
+human_caps$landscape[human_caps$survey_id == "KhaoYai2019"] = "Khao_Yai"
+human_caps$landscape[human_caps$survey_id == "Lambir2017"] = "Lambir_hills"
+human_caps$landscape[human_caps$survey_id == "Leuser"] = "Gunung_Leuser"
+human_caps$landscape[human_caps$survey_id %in% c("Pasoh_TEAM_2013", "Pasoh_TEAM_2014", "Pasoh_TEAM_2015", "Pasoh_TEAM_2017")] = "Pasoh"
+human_caps$landscape[human_caps$survey_id == "Singapore"] = "Singapore"
+human_caps$landscape[human_caps$survey_id %in% c("Ulu_Muda_2015a", "Ulu_Muda_2015b", "Ulu_Muda_2015c", "Ulu_Muda_2015d", "Ulu_Muda_2016a", "Ulu_Muda_2016b", "Ulu_Muda_2016c")] = "Ulu_Muda"
+
+#Check whether there is 10 landscapes
+sort(unique(human_caps$landscape))
+
+#Check whether there is "NA"
+anyNA(human_caps$landscape) #good
+
+#set the landscape column as a factor
+human_caps$landscape = as.factor(human_caps$landscape)
+str(human_caps) #great!
+
+```
+
+###Defining the temporal categorisations ("outcomes"): Day, Twilight and Night
+
+Here, we will be defining our detections based on the time of day. We define "day" detections as being detections found between 0731 hr to 1629 hr, "twilight" detections as being detections found between 0430 hr to 0730 hr or 1630 hr to 1930 hr, and lastly "night" detections as being detections found between 1931hr to 0429 hr.
+
+```{r}
+#Include the respective time of day categories
+human_caps$time_of_day = "NA"
+human_caps$time_of_day[human_caps$time.rad >= 5.109451 | human_caps$time.rad <= 1.178096] = "night"
+human_caps$time_of_day[human_caps$time.rad >= 1.967859 & human_caps$time.rad <= 4.319689] = "day"
+human_caps$time_of_day[human_caps$time_of_day == "NA"] = "twilight"
+sort(unique(human_caps$time_of_day))
+
+#Set the time of day column as a factor
+human_caps$time_of_day = as.factor(human_caps$time_of_day)
+str(human_caps) #great!
+
+#"Twilight" category as baseline category
+human_caps$time_of_day <- relevel(human_caps$time_of_day, ref = "twilight")
+```
+
+###Build the Multinomial Logistic Regression Model using "mclogit" package 
+
+This package allows for the inclusion of random effects.
+
+Guidelines for building the multinomial equation using mblogit():
+
+*random = random effects (~1 | Your random effect)
+
+*estimator = Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML)
+
+*dispersion = "Afroz", "Fletcher", "Pearson"
+
+*method = "PQL" or "MQL"
+
+```{r}
+#Build the multinomial model
+model = mblogit(time_of_day ~ forest_integrity, random = ~1 | landscape, data = human_caps, estimator = "REML", dispersion = "Afroz", method = "PQL")
+```
+###Extract the p-value and estimates for each model and store it in a dataframe
+
+We will be extracting the summary statistics of "night vs day" and "twilight vs day" under the effect of forest integrity for visualization later.
+
+```{r}
+#Create an empty dataframe and rearrnage it
+sum_stats_extracted = data.frame(summary(model)$coefficients)
+sum_stats_extracted$formula = row.names(sum_stats_extracted)
+sum_stats_extracted = sum_stats_extracted %>% dplyr::rename("p_value" = "Pr...z..", "estimates" = "Estimate") 
+
+#Save it!
+write.csv(sum_stats_extracted, "human_summary_statistics_20230918.csv", row.names = F)
+```
+
+###Visualising the Multinomial Regression Models
+
+Visualising mixed effects models can yield very jagged and sporadic plots that do not look nice. Here, we will generate an overall trend line for each diel category ("day", "twilight", and "night") by averaging or overlaying the predicted probabilities of each diel category from each landscape which will look smooth.
+
+##### Calculate the predicted probabilities for the model
+
+```{r}
+#Generate newdata to store predicted probabilities
+newdata <- expand.grid(forest_integrity = seq(min(human_caps$forest_integrity), max(human_caps$forest_integrity), length.out = 100), landscape = unique(human_caps$landscape))
+
+#Calculate predicted probabilities
+predictions <- predict(model, newdata = newdata, type = "response")
+newdata <- cbind(newdata, predictions) 
+rm(predictions)
+```
+
+#####Loop to compute smoothed/average values
+
+```{r}
+#Create a dataframe to be filled with smoothed/averaged values
+smoothed_vals <- data.frame(forest_integrity = unique(newdata$forest_integrity)) 
+
+k = "day"; l = "Pasoh"
+
+for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero
+    smoothed_vals[[k]] <- 0 
+    
+    for (l in unique(newdata$landscape)) {#repeat for each unique landscape
+      
+      #fit a smooth curve to predict a specific time of day (like "day" or "night") based on forest_integrity
+      loess_fit <- loess(formula = as.formula(paste(k, "~ forest_integrity")), data = subset(newdata, landscape == l))
+      
+      #get the expected values (predictions) for a specific time of day (like "day") based on various forest_integrity values and adding them up for each landscape. Later, this accumulated total will be averaged out to show the general trend  
+      smoothed_vals[[k]] <- smoothed_vals[[k]] + predict(loess_fit, newdata = data.frame(forest_integrity = smoothed_vals$forest_integrity))
+      
+    }
+    
+    #Average the smoothed values
+    smoothed_vals[[k]] <- smoothed_vals[[k]] / length(unique(newdata$landscape))
+}
+
+#keep environment clean!
+rm(k,l,loess_fit)
+```
+
+#####Loop to compute the standard errors of smoothed/average values and store it in an empty list
+
+```{r}
+#Create a dataframe to be filled with standard errors
+se_data <- data.frame(forest_integrity = unique(newdata$forest_integrity))
+
+k = "day";l = "0.00";u = "Pasoh"
+  
+  for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero to store standard errors
+    se_data[[paste(k, "se", sep = "_")]] <- NA
+    
+    for (l in unique(newdata$forest_integrity)) {#repeat for each unique value of forest integrity
+      
+      #creates a list of zeros, one for each unique landscape, to store the predicted values (from the smooth curve) for that particular forest_integrity and time of day.
+        smoothed_values_for_fi <- numeric(length = length(unique(newdata$landscape)))
+        
+        for (u in seq_along(unique(newdata$landscape))) {#repeat for each landscape
+          
+          #fits a smooth curve, using only data from the current landscape
+          loess_fit <- loess(formula = as.formula(paste(k, "~ forest_integrity")), data = subset(newdata, landscape == unique(newdata$landscape)[u]))
+          
+          #predicts the time of day (like "day") for the current forest_integrity value using the smooth curve from the previous step. It stores this predicted value in our list of zeros from earlier.
+            smoothed_values_for_fi[u] <- predict(loess_fit, newdata = data.frame(forest_integrity = l))
+          
+        }
+      #calculate the standard error of each prediction for each landsape at each unique forest integrity value for each diel category
+        se_data[se_data$forest_integrity == l, paste(k, "se", sep = "_")] <- sd(smoothed_values_for_fi) / sqrt(length(smoothed_values_for_fi))
+    }
+  }
+  
+#keep environment clean
+rm(k,l,smoothed_values_for_fi,u,loess_fit)
+
+```
+
+#####Merging the smoothed values and standard errors
+
+```{r}
+human_visuals = merge(smoothed_vals, se_data, by = "forest_integrity")
+```
+
+#####Visualise human activity
+
+```{r}
+
+plot <- ggplot(human_visuals, aes(x = forest_integrity)) + 
+    
+    #plot the "day" category
+    geom_line(aes(y = day, color = "Day"), size = 1.5, linetype = "solid") + 
+    geom_ribbon(aes(ymin = day - 1.96 * day_se, ymax = day + 1.96 * day_se, fill = "Day"), alpha = 0.2) +
+    
+    #plot the "twilight" category
+    #geom_line(aes(y = twilight, color = "Twilight"), linetype = linetype_twilight, size = 1.5) +
+    geom_ribbon(aes(ymin = twilight - 1.96 * twilight_se, ymax = twilight + 1.96 * twilight_se, fill = "Twilight"), alpha = 0.2) +
+    
+    #plot the "night" category
+    geom_line(aes(y = night, color = "Night"), linetype = "dashed", size = 1.5) +
+    geom_ribbon(aes(ymin = night - 1.96 * night_se, ymax = night + 1.96 * night_se, fill = "Night"), alpha = 0.2) +
+    #Choose appropriate colours
+    scale_color_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+    scale_fill_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+      
+    #fixed the range of the y-axis
+    coord_cartesian(ylim = c(0.0, 1.0)) +  
+      
+    #reverse the x-axis to make it from high to low integrity (intact ---> degraded)
+    scale_x_reverse() +
+    
+    #Add axis titles
+    labs(x = "Forest Landscape Integrity Index (FLII)", y = "Mean Predicted Probability") +
+    theme_classic()
+
+#save the plot
+ggsave("human_activity_multinomial_plot_20230918.PDF", plot = plot, width = 8, height = 6, units = "in")
+
+```
+

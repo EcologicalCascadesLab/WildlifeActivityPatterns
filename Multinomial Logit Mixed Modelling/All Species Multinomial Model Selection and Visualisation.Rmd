@@ -1,0 +1,684 @@
+---
+title: "All Species Multinomial Regression Model Selection"
+author: "Samuel Xin Tham Lee"
+date: "18/08/2023"
+output: html_document
+---
+
+Here, we will carry out model selection to observe whether forest integrity, body mass(in kg)/body size (i.e., large, medium, and small), and feeding guild (i.e., carnivore, herbivore, and omnivore) contributes to the model. We will grouped all species in our captures dataframe to do this. 
+
+```{r setup, include=FALSE}
+## start with clean enviro
+rm(list = ls())
+
+### Set Working directories
+## Markdown requires ABSOLUTE paths, not relative paths. 
+# Adjust the code accordingly for your machine. 
+
+# set WD --> must be run in console, not code chunk! 
+setwd("C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by community [Multinomial] Sam Honours") 
+# and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity temporal shift by community [Multinomial] Sam Honours")
+```
+
+###Load relevant packages
+
+```{r}
+#Load libraries
+library(tidyverse);library(mclogit)
+
+```
+
+###Load and inspect the dataframe
+
+```{r}
+#Load dataframe
+caps = as.data.frame(read.csv("SEA_Activity_dataset_for_community_guild-level_analyses_20230306.csv"))
+
+#Inspect dataframe
+head(caps)
+str(caps)
+names(caps)
+anyNA(caps)
+```
+
+#Using Multinomial logistic Regressions Models to predict the probability of the community being nocturnal, diurnal and crepuscular
+
+Unlike binomial logistic regressions, Multinomial logistic regressions can model a categorical response variable with 3 or more outcomes. In our study, the outcomes are detections during the day, twilight and night. We will be using this model to essentially predict the probabilities of wildlife community being diurnal, crepuscular and nocturnal over a gradient of forest integrity (independent/predictor variable).
+
+But first, let's create a "landscape" column to represent our 10 landscapes across Southeast Asia. This will be treated as our random effect in our study. 
+
+```{r}
+#Check how many surveys we have!
+sort(unique(caps$survey_id))
+
+#Let's create our "landscape" column
+caps$landscape = NA
+caps$landscape[caps$survey_id == "BBS"] = "Bukit_Barisan_Selatan"
+caps$landscape[caps$survey_id %in% c("Danum_Valley_2019a", "Danum2018")] = "Danum_Valley"
+caps$landscape[caps$survey_id == "Kerinci"] = "Kerinci_Seblat"
+caps$landscape[caps$survey_id == "KhaoChong2018"] = "Khao_Chong"
+caps$landscape[caps$survey_id == "KhaoYai2019"] = "Khao_Yai"
+caps$landscape[caps$survey_id == "Lambir2017"] = "Lambir_hills"
+caps$landscape[caps$survey_id == "Leuser"] = "Gunung_Leuser"
+caps$landscape[caps$survey_id %in% c("Pasoh_TEAM_2013", "Pasoh_TEAM_2014", "Pasoh_TEAM_2015", "Pasoh_TEAM_2017")] = "Pasoh"
+caps$landscape[caps$survey_id == "Singapore"] = "Singapore"
+caps$landscape[caps$survey_id %in% c("Ulu_Muda_2015a", "Ulu_Muda_2015b", "Ulu_Muda_2015c", "Ulu_Muda_2015d", "Ulu_Muda_2016a", "Ulu_Muda_2016b", "Ulu_Muda_2016c")] = "Ulu_Muda"
+
+#Check whether there is 10 landscapes
+sort(unique(caps$landscape))
+
+#Check whether there is "NA"
+anyNA(caps$landscape) #good
+
+#set the landscape column as a factor
+caps$landscape = as.factor(caps$landscape)
+str(caps) #great!
+
+```
+
+###Defining the temporal categorisations ("outcomes"): Day, Twilight and Dusk
+
+Here, we will be defining our detections based on the time of day. We define "day" detections as being detections found between 0731 hr to 1629 hr, "twilight" detections as being detections found between 0430 hr to 0730 hr or 1630 hr to 1930 hr, and lastly "night" detections as being detections found between 1931hr to 0429 hr.
+
+```{r}
+#Include the respective time of day categories
+caps$time_of_day = "NA"
+caps$time_of_day[caps$time.rad >= 5.109451 | caps$time.rad <= 1.178096] = "night"
+caps$time_of_day[caps$time.rad >= 1.967859 & caps$time.rad <= 4.319689] = "day"
+caps$time_of_day[caps$time_of_day == "NA"] = "twilight"
+sort(unique(caps$time_of_day))
+
+#Set the time of day column as a factor
+caps$time_of_day = as.factor(caps$time_of_day)
+str(caps) #great!
+
+#"Twilight" category as baseline category
+caps$time_of_day <- relevel(caps$time_of_day, ref = "twilight")
+```
+
+###Splitting the "trophic_guild" column into body size and feeding guild.
+
+```{r}
+#Use the separate() function to do this
+caps = caps %>% separate(trophic_guild, into = c("Body_size", "feeding_guild"), sep = "_")
+
+#"small" category as baseline category for body size
+caps$Body_size = as.factor(caps$Body_size)
+caps$Body_size <- relevel(caps$Body_size, ref = "small")
+```
+
+###Reverse forest integrity from 10 to 0 and rename it to "disturbance_index"
+
+```{r}
+#Reverse forest integrity
+caps$disturbance_index <- max(caps$forest_integrity) - caps$forest_integrity
+```
+
+###Building the Multinomial Logistic Regression Model with one random effect using "mclogit" package
+
+This package allows for the inclusion of random effects. For these models, we will use one random effects, namely landscape.
+
+Guidelines for building the multinomial equation using mblogit():
+
+*random = random effects (~1 | Your random effect)
+
+*estimator = Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML)
+
+*dispersion = "Afroz", "Fletcher", "Pearson"
+
+*method = "PQL" or "MQL"
+
+We will use body size and feeding guild as the other fixed effects here as well.  
+
+```{r}
+#Create a list containing our model formulas to iterate over in the loop
+model_formula = list(formula(time_of_day ~ disturbance_index),
+                     formula(time_of_day ~ Body_size),
+                     formula(time_of_day ~ Body_mass),
+                     formula(time_of_day ~ feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_size),
+                     formula(time_of_day ~ disturbance_index * Body_size),
+                     formula(time_of_day ~ disturbance_index + Body_mass),
+                     formula(time_of_day ~ disturbance_index * Body_mass),
+                     formula(time_of_day ~ disturbance_index + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_size + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * Body_size * feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_mass + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * Body_mass * feeding_guild))
+
+names(model_formula) = c("time_of_day ~ disturbance_index", 
+                         "time_of_day ~ Body_size", 
+                         "time_of_day ~ Body_mass",
+                         "time_of_day ~ feeding_guild", 
+                         "time_of_day ~ disturbance_index + Body_size", 
+                         "time_of_day ~ disturbance_index * Body_size", 
+                         "time_of_day ~ disturbance_index + Body_mass",
+                         "time_of_day ~ disturbance_index * Body_mass",
+                         "time_of_day ~ disturbance_index + feeding_guild", 
+                         "time_of_day ~ disturbance_index * feeding_guild", 
+                         "time_of_day ~ disturbance_index + Body_size + feeding_guild", 
+                         "time_of_day ~ disturbance_index * Body_size * feeding_guild",
+                         "time_of_day ~ disturbance_index + Body_mass + feeding_guild",
+                         "time_of_day ~ disturbance_index * Body_mass * feeding_guild")
+
+#Create an empty list to store the models
+models = list()
+
+i=1
+
+for (i in seq_along(model_formula)) {#repeat for each formula
+    
+  #Select a formula
+  a = model_formula[[i]]
+  b = names(model_formula)[i]#save the name of the model
+      
+  #Build the multinomial model using the different formulas
+  c = mblogit(a, random = ~1 | landscape, data = caps, estimator = "REML", dispersion = "Afroz", method = "PQL")
+    
+  #Save the models
+  models[[i]] = c
+  names(models)[i] = b
+}
+
+#Keep environemnt clean
+rm(a,b,c,i,model_formula)
+```
+
+###Model selection using Aikaike Information Criterion (AIC)
+
+Now, we will use AIC to select the best multinomial model and create a table of AIC scores for the supplementary materials.
+
+```{r}
+##Loop to identify the model with the lowest AIC score 
+
+#create a dataframe to fill
+aic_table <- data.frame(Model = character(), AIC = numeric())
+
+for (i in names(models)) {#repeat for each model
+  
+  #Use sapply and AIC to calculate AIc scores of each model and output it as a vector/matrix
+  aics <- AIC(models[[i]])
+  
+  #Create a temporary dataframe to store results 
+  temp_df <- data.frame(Model = i, AIC = as.numeric(aics))
+  
+  #Bind all the results together
+  aic_table <- rbind(aic_table, temp_df)
+  
+}
+
+#save the table
+write.csv(aic_table, "all_species_AIC_scores_[landscape_only]_20231004.csv", row.names = F)
+
+#Keep environment clean
+rm(aic_table,temp_df,aics,i)
+```
+
+###Extract the p-value and estimates for best model and store it in a dataframe
+
+```{r}
+#Subset best model 
+a = models[[12]] #Best model: time_of_day ~ disturbance_index * Body_size * feeding_guild
+b = summary(a)
+c = as.data.frame(b$coefficients)
+
+#Clean it up
+c = c %>% 
+  mutate(formula = row.names(c)) %>% 
+  dplyr::rename("estimates" = "Estimate", "p-value" = "Pr(>|z|)")
+
+#save it
+write.csv(c, "all_species_sumstats_[landscape_only]_20231004.csv")
+
+#keep environment clean!
+rm(a,b,c)
+```
+
+###Extract the p-value and estimates for model with disturbance as the only fixed effect and store it in a dataframe
+
+```{r}
+#Subset best model 
+a = models[[1]] #time_of_day ~ disturbance_index 
+b = summary(a)
+c = as.data.frame(b$coefficients)
+
+#Clean it up
+c = c %>% 
+  mutate(formula = row.names(c)) %>% 
+  dplyr::rename("estimates" = "Estimate", "p-value" = "Pr(>|z|)")
+
+#save it
+write.csv(c, "all_species_sumstats_[landscape_only]_20231030.csv", row.names = F)
+
+#keep environment clean!
+rm(a,b,c)
+```
+
+###Visualizing the effect of disturbance on the probability of being active at day, twilight, and night
+
+#####Calculate the predicted probabilities 
+
+```{r}
+#Create new dataframe to store predicted probabilities
+newdata <-  expand.grid(
+disturbance_index = seq(min(caps$disturbance_index), max(caps$disturbance_index), length.out = 100),
+landscape = unique(caps$landscape))
+
+#Subset model with this equation:time_of_day ~ forest_integrity
+b = models[[1]]
+
+#Calculate predicted probabilities
+predictions <- predict(b, newdata = newdata, type = "response")
+newdata = cbind(newdata, predictions)
+
+#Keep environment clean!
+rm(b,predictions)
+
+```
+
+######Loop to compute smoothed/average values
+
+```{r}
+# Create a dataframe to be filled with smoothed/averaged values
+smoothed_vals <- data.frame(disturbance_index = unique(newdata$disturbance_index))
+
+k = "day"; l = "Pasoh" 
+
+for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero
+    smoothed_vals[[k]] <- 0 
+    
+    for (l in unique(newdata$landscape)) {#repeat for each unique landscape
+      
+      #fit a smooth curve to predict a specific time of day (like "day" or "night") based on disturbance index
+      loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset(newdata, landscape == l))
+      
+      #get the expected values (predictions) for a specific time of day (like "day") based on various disturbance index values and adding them up for each landscape. Later, this accumulated total will be averaged out to show the general trend  
+      smoothed_vals[[k]] <- smoothed_vals[[k]] + predict(loess_fit, newdata = data.frame(disturbance_index = smoothed_vals$disturbance_index))
+      
+    }
+    
+    #Average the smoothed values
+    smoothed_vals[[k]] <- smoothed_vals[[k]] / length(unique(newdata$landscape))
+  }
+
+#Keep environment clean!
+rm(loess_fit,k,l)
+
+```
+
+#####Loop to compute standard errors for smoothed/average values
+
+```{r}
+# Create a dataframe to be filled with standard errors
+se_data <- data.frame(disturbance_index = unique(newdata$disturbance_index))
+
+k = "day"; l = 0.00; u = "Pasoh"
+
+for (k in c("day", "twilight", "night")) {#repeat for each diel category
+    
+    #Set the columns of each diel category to zero to store standard errors
+    se_data[[paste(k, "se", sep = "_")]] <- NA
+    
+    for (l in unique(newdata$disturbance_index)) {#repeat for each unique value of disturbance index
+      
+      #creates a list of zeros, one for each unique landscape, to store the predicted values (from the smooth curve) for that particular disturbance index and time of day.
+        smoothed_values_for_fi <- numeric(length = length(unique(newdata$landscape)))
+        
+        for (u in seq_along(unique(newdata$landscape))) {#repeat for each landscape
+          
+          #fits a smooth curve, using only data from the current landscape
+          loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset(newdata, landscape == unique(newdata$landscape)[u]))
+          
+          #predicts the time of day (like "day") for the current disturbance index value using the smooth curve from the previous step. It stores this predicted value in our list of zeros from earlier.
+            smoothed_values_for_fi[u] <- predict(loess_fit, newdata = data.frame(disturbance_index = l))
+          
+        }
+      #calculate the standard error of each prediction for each landsape at each unique forest integrity value for each diel category
+        se_data[se_data$disturbance_index == l, paste(k, "se", sep = "_")] <- sd(smoothed_values_for_fi) / sqrt(length(smoothed_values_for_fi))
+
+    }
+  }
+
+#keep environment clean
+rm(k,l,u,smoothed_values_for_fi,loess_fit)
+```
+
+#####Merging the smoothed values and standard errors
+
+```{r}
+#Merge them
+df = merge(smoothed_vals, se_data, by = "disturbance_index")
+rm(smoothed_vals,se_data)
+```
+
+#####Visualise the best model
+
+```{r}
+plot <- ggplot(df, aes(x = disturbance_index)) + 
+    
+    #plot the "day" category
+    geom_line(aes(y = day, color = "Day"), linewidth = 1.5, linetype = "dashed") + 
+    geom_ribbon(aes(ymin = day - 1.96 * day_se, ymax = day + 1.96 * day_se, fill = "Day"), alpha = 0.2) +
+    
+    #plot the "twilight" category
+    #geom_line(aes(y = twilight, color = "Twilight"), linetype = linetype_twilight, linewidth = 1.5) +
+    geom_ribbon(aes(ymin = twilight - 1.96 * twilight_se, ymax = twilight + 1.96 * twilight_se, fill = "Twilight"), alpha = 0.2) +
+    
+    #plot the "night" category
+    geom_line(aes(y = night, color = "Night"), linetype = "dashed", linewidth = 1.5) +
+    geom_ribbon(aes(ymin = night - 1.96 * night_se, ymax = night + 1.96 * night_se, fill = "Night"), alpha = 0.2) +
+      
+    #Choose appropriate colours
+    scale_color_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+    scale_fill_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+      
+    #fixed the range of the y-axis
+    coord_cartesian(ylim = c(0.0, 1.0)) +  
+      
+    #Add axis titles
+    labs(x = "Disturbance Index", y = "Mean Predicted Probability") +
+    theme_classic()
+
+plot
+
+#save it
+ggsave("all_species_plot_[landscape_only]_20231003.PDF", plot = plot, height = 6, width = 8, units = "in")
+
+#keep environment clean
+rm(df,models,newdata,plot)
+
+```
+
+#Model selection using two random effects (i.e., species and landscape)
+
+###Building the Multinomial Logistic Regression Model with two random effects using "mclogit" package
+
+This package allows for the inclusion of random effects. For these models, we will use two random effects, namely landscape and species.
+
+Guidelines for building the multinomial equation using mblogit():
+
+*random = random effects (e.g., c(~1 | Your first random effect, ~1 | Your second random effect))
+
+*estimator = Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML)
+
+*dispersion = "Afroz", "Fletcher", "Pearson"
+
+*method = "PQL" or "MQL"
+
+We will use body size and feeding guild as the other fixed effects here as well.  
+
+```{r}
+#Create a list containing our model formulas to iterate over in the loop
+model_formula = list(formula(time_of_day ~ disturbance_index),
+                     formula(time_of_day ~ Body_size),
+                     formula(time_of_day ~ Body_mass),
+                     formula(time_of_day ~ feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_size),
+                     formula(time_of_day ~ disturbance_index * Body_size),
+                     formula(time_of_day ~ disturbance_index + Body_mass),
+                     formula(time_of_day ~ disturbance_index * Body_mass),
+                     formula(time_of_day ~ disturbance_index + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_size + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * Body_size * feeding_guild),
+                     formula(time_of_day ~ disturbance_index + Body_mass + feeding_guild),
+                     formula(time_of_day ~ disturbance_index * Body_mass * feeding_guild))
+
+names(model_formula) = c("time_of_day ~ disturbance_index", 
+                         "time_of_day ~ Body_size", 
+                         "time_of_day ~ Body_mass",
+                         "time_of_day ~ feeding_guild", 
+                         "time_of_day ~ disturbance_index + Body_size", 
+                         "time_of_day ~ disturbance_index * Body_size", 
+                         "time_of_day ~ disturbance_index + Body_mass",
+                         "time_of_day ~ disturbance_index * Body_mass",
+                         "time_of_day ~ disturbance_index + feeding_guild", 
+                         "time_of_day ~ disturbance_index * feeding_guild", 
+                         "time_of_day ~ disturbance_index + Body_size + feeding_guild", 
+                         "time_of_day ~ disturbance_index * Body_size * feeding_guild",
+                         "time_of_day ~ disturbance_index + Body_mass + feeding_guild",
+                         "time_of_day ~ disturbance_index * Body_mass * feeding_guild")
+
+#Create an empty list to store the models
+models = list()
+
+i=1
+
+for (i in seq_along(model_formula)) {#repeat for each formula
+    
+  #Select a formula
+  a = model_formula[[i]]
+  b = names(model_formula)[i]#save the name of the model
+      
+  #Build the multinomial model using the different formulas
+  c = mblogit(a, random = c(~1 | landscape, ~1 | Species), data = caps, estimator = "REML", dispersion = "Afroz", method = "PQL")
+    
+  #Save the models
+  models[[i]] = c
+  names(models)[i] = b
+}
+
+#Keep environemnt clean
+rm(a,b,c,i,model_formula)
+```
+
+###Model selection using Aikaike Information Criterion (AIC)
+
+Now, we will use AIC to select the best multinomial model for each model and create a table of AIC scores for the supplementary materials.
+
+```{r}
+##Loop to identify the model with the lowest AIC score 
+
+#create a dataframe to fill
+aic_table <- data.frame(Model = character(), AIC = numeric())
+
+for (i in names(models)) {#repeat for each community
+  
+  #Use sapply and AIC to calculate AIc scores of each model and ouput it as a vector/matrix
+  aics <- AIC(models[[i]])
+  
+  #Create a temporary dataframe to store results 
+  temp_df <- data.frame(Model = i, AIC = as.numeric(aics))
+  
+  #Bind all the results together
+  aic_table <- rbind(aic_table, temp_df)
+  
+}
+
+#save the table
+write.csv(aic_table, "all_species_AIC_scores_[landscape_species]_20231004.csv", row.names = F)
+
+#Keep environment clean
+rm(aic_table,temp_df,aics,i)
+```
+
+###Extract the p-value and estimates for best model and store it in a dataframe
+
+```{r}
+#Subset best model 
+a = models[[12]] #Best model: time_of_day ~ disturbance_index * Body_size * feeding_guild
+b = summary(a)
+c = as.data.frame(b$coefficients)
+
+#Clean it up
+c = c %>% 
+  mutate(formula = row.names(c)) %>% 
+  dplyr::rename("estimates" = "Estimate", "p-value" = "Pr(>|z|)")
+
+#save it
+write.csv(c, "all_species_sumstats_[landscape_species]_20231004.csv")
+
+#keep environment clean!
+rm(a,b,c)
+```
+
+###Extract the p-value and estimates for model with disturbance as the only fixed effect and store it in a dataframe
+
+```{r}
+#Subset best model 
+a = models[[1]] #time_of_day ~ disturbance_index 
+b = summary(a)
+c = as.data.frame(b$coefficients)
+
+#Clean it up
+c = c %>% 
+  mutate(formula = row.names(c)) %>% 
+  dplyr::rename("estimates" = "Estimate", "p-value" = "Pr(>|z|)")
+
+#save it
+write.csv(c, "all_species_sumstats_[landscape_species]_20231030.csv", row.names = F)
+
+#keep environment clean!
+rm(a,b,c)
+```
+
+###Visualizing the effect of disturbance on the probability of being active during day, twilight, and night  
+
+#####Calculate the predicted probabilities 
+
+```{r}
+#Create new dataframe to store predicted probabilities
+newdata <-  expand.grid(
+disturbance_index = seq(min(caps$disturbance_index), max(caps$disturbance_index), length.out = 100),
+landscape = unique(caps$landscape),
+Species = unique(caps$Species))
+
+#Subset model with this equation:time_of_day ~ forest_integrity
+b = models[[1]]
+
+#Calculate predicted probabilities
+predictions <- predict(b, newdata = newdata, type = "response")
+newdata = cbind(newdata, predictions)
+
+#Keep environment clean!
+rm(b,predictions)
+```
+
+######Loop to compute smoothed/average values
+
+```{r}
+# Create a dataframe to be filled with smoothed/averaged values
+smoothed_vals <- data.frame(disturbance_index = unique(newdata$disturbance_index))
+
+k = "day"; l = "Pasoh"; s = "Macaca_nemestrina"
+
+for (k in c("day", "twilight", "night")) { # Repeat for each diel category
+
+  # Set the columns of each diel category to zero
+  smoothed_vals[[k]] <- 0
+
+  for (l in unique(newdata$landscape)) { # Repeat for each unique landscape
+    
+    for (s in unique(newdata$Species)) { # Repeat for each unique Species
+      
+      # Subset the data for the current landscape and Species
+      subset_data <- subset(newdata, landscape == l & Species == s)
+
+      # Fit a smooth curve to predict a specific time of day (like "day" or "night") based on disturbance index
+      loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset_data)
+
+      # Get the expected values (predictions) for a specific time of day (like "day") based on various disturbance index values
+      smoothed_vals[[k]] <- smoothed_vals[[k]] + predict(loess_fit, newdata = data.frame(disturbance_index = smoothed_vals$disturbance_index))
+    }
+    
+    #Average the smoothed values for the current landscape
+    smoothed_vals[[k]] <- smoothed_vals[[k]] / length(unique(newdata$Species))
+  }
+}
+
+#Keep environment clean!
+rm(loess_fit, subset_data,k,l,s)
+
+```
+
+#####Loop to compute standard errors for smoothed/average values
+
+```{r}
+# Create a dataframe to be filled with standard errors
+se_data <- data.frame(disturbance_index = unique(newdata$disturbance_index))
+
+k = "day"; l = 0; u = 1; s = 1
+
+for (k in c("day", "twilight", "night")) { # Repeat for each diel category
+
+  # Set the columns of each diel category to zero to store standard errors
+  se_data[[paste(k, "se", sep = "_")]] <- NA
+
+  for (l in unique(newdata$disturbance_index)) { # Repeat for each unique value of disturbance index
+    
+    # Create a list to store smoothed values for the current disturbance index value and diel category
+    smoothed_values_for_fi <- numeric(length = length(unique(newdata$landscape) * unique(newdata$Species)))
+
+    for (u in seq_along(unique(newdata$landscape))) { # Repeat for each landscape
+
+      for (s in seq_along(unique(newdata$Species))) { # Repeat for each Species
+        
+        # Subset the data for the current landscape and Species
+        subset_data <- subset(newdata, landscape == unique(newdata$landscape)[u] & Species == unique(newdata$Species)[s])
+        
+        # Fit a smooth curve using only data from the current landscape and Species
+        loess_fit <- loess(formula = as.formula(paste(k, "~ disturbance_index")), data = subset_data)
+
+        # Predict the time of day (like "day") for the current disturbance index value using the smooth curve
+        smoothed_values_for_fi[u + (s - 1) * length(unique(newdata$landscape))] <- predict(loess_fit, newdata = data.frame(disturbance_index = l))
+      }
+    }
+    
+    # Calculate the standard error of each prediction for each landscape at each unique disturbance index value for each diel category
+    se_data[se_data$disturbance_index == l, paste(k, "se", sep = "_")] <- sd(smoothed_values_for_fi) / sqrt(length(smoothed_values_for_fi))
+
+  }
+}
+
+#keep environment clean
+rm(k,l,u,s,smoothed_values_for_fi,loess_fit,subset_data)
+```
+
+#####Merging the smoothed values and standard errors
+
+```{r}
+#Merge them
+df = merge(smoothed_vals, se_data, by = "disturbance_index")
+rm(smoothed_vals,se_data)
+```
+
+#####Visualise the model
+
+```{r}
+plot <- ggplot(df, aes(x = disturbance_index)) + 
+    
+    #plot the "day" category
+    geom_line(aes(y = day, color = "Day"), linewidth = 1.5, linetype = "dashed") + 
+    geom_ribbon(aes(ymin = day - 1.96 * day_se, ymax = day + 1.96 * day_se, fill = "Day"), alpha = 0.2) +
+    
+    #plot the "twilight" category
+    #geom_line(aes(y = twilight, color = "Twilight"), linetype = linetype_twilight, linewidth = 1.5) +
+    geom_ribbon(aes(ymin = twilight - 1.96 * twilight_se, ymax = twilight + 1.96 * twilight_se, fill = "Twilight"), alpha = 0.2) +
+    
+    #plot the "night" category
+    geom_line(aes(y = night, color = "Night"), linetype = "solid", linewidth = 1.5) +
+    geom_ribbon(aes(ymin = night - 1.96 * night_se, ymax = night + 1.96 * night_se, fill = "Night"), alpha = 0.2) +
+      
+    #Choose appropriate colours
+    scale_color_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+    scale_fill_manual(values = c("Day" = "orange", "Twilight" = "purple", "Night" = "darkblue")) +
+      
+    #fixed the range of the y-axis
+    coord_cartesian(ylim = c(0.0, 1.0)) +  
+    
+    #Add axis titles
+    labs(x = "Disturbance Index", y = "Mean Predicted Probability") +
+    theme_classic()
+
+plot
+
+#save it
+ggsave("all_species_plot_[landscape_species]_20231002.PDF", plot = plot, height = 6, width = 8, units = "in")
+
+```
+
+

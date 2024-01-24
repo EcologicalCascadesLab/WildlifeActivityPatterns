@@ -1,0 +1,740 @@
+genus_species,Type,Family,Genus,species,IUCN,Guild,Notes,Body_mass
+Accipiter_fasciatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Accipiter_gentilis,Bird,NA,NA,NA,NA,NA,NA,NA
+Accipitridae_spp,Bird,Accipitridae,NA,NA,NA,carnivore,NA,NA
+Acerodon_mackloti,Bird,Pteropodidae,Acerodon,mackloti,VU,NA,bat,464
+Acridotheres_javanicus,Bird,NA,NA,NA,NA,NA,NA,NA
+Acridotheres_tristis,Bird,NA,NA,NA,NA,NA,NA,NA
+Aegotheles_cristatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Aepypodius_arfakianus,Bird,Megapodiidae,Aepypodius,arfakianus,NA,NA,NA,NA
+Ailuroedus_melanotis,Bird,Ptilonorhynchidae,Ailuroedus,melanotis,NA,NA,NA,NA
+Alcedinidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Alophoixus_phaeocephalus,Bird,NA,NA,NA,NA,NA,NA,NA
+Alouatta_caraya,Bird,Atelidae,Alouatta,caraya,LC,folivore_frugivore,NA,5590
+Alouatta_guariba,Mammal,Atelidae,Alouatta,guariba,LC,folivore_frugivore,NA,6933.333333
+Amaurornis_phoenicurus,Bird,NA,NA,NA,NA,NA,NA,NA
+Anorrhinus_galeritus,Bird,NA,NA,NA,NA,NA,NA,NA
+Anthreptes_malacensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Anthus_novaeseelandiae,Bird,NA,NA,NA,NA,NA,NA,NA
+Aonyx_cinereus,Mammal,Mustelidae,Aonyx,cinereus,VU,picivore_carnivore,NA,3530
+Aramides_saracura,Bird,NA,Aramides,saracura,NA,NA,NA,NA
+Aramides_sp.,Bird,NA,Aramides,NA,NA,NA,NA,NA
+Arborophila_charltonii,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_chloropus,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_hyperythra,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_rubrirostris,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_sp.,Bird,NA,NA,NA,NA,NA,NA,NA
+Arctictis_binturong,Mammal,Viverridae,Arctictis,binturong,VU,omnivore,NA,13000
+Arctogalidia_trivirgata,Mammal,Viverridae,Arctogalidia,trivirgata,LC,omnivore,NA,2320
+Arctonyx_collaris,Mammal,Mustelidae,Arctonyx,collaris,VU,omnivore,NA,8170
+Arctonyx_hoevenii,Mammal,Mustelidae,Arctonyx,hoevenii,LC,omnivore,NA,8170
+Ardeotis_australis,Bird,NA,NA,NA,NA,NA,NA,NA
+Argus_sp.,Bird,Phasianidae,NA,NA,NA,NA,If it refers to the pheasant than Argus is not a genus,NA
+Argusianus_argus,Bird,Phasianidae,Argusianus,argus,VU,omnivore,NA,NA
+Arremon_flavirostris,Bird,NA,Arremon,flavirostris,NA,NA,NA,NA
+Artamus_cinereus,Bird,NA,NA,NA,NA,NA,NA,NA
+Asarcornis_scutulata,Bird,NA,NA,NA,NA,NA,NA,NA
+Atherurus_macrourus,Mammal,Hystricidae,Atherurus,macrourus,LC,herbivore?,Confirm the diet,2000
+Attila_phoenicurus,Bird,NA,Attila,phoenicurus,NA,NA,NA,NA
+ATV,Vehicle,NA,NA,NA,NA,NA,NA,NA
+Automolus_leucophthlamus,Bird,NA,Automolus,leucophthlamus,NA,NA,NA,NA
+Axis_axis,Mammal,Cervidae,Axis,axis,LC,herbivore,NA,69500
+Baryphthengus_ruficapillus,Bird,Momotidae,Baryphthengus,ruficapillus,LC,omnivore,NA,NA
+Basileuterus_culicivorus,Bird,NA,Basileuterus,culicivorus,NA,NA,NA,NA
+Bassariscus_astutus,Mammal,Procyonidae,Bassariscus,astutus,LC,omnivore,NA,1020
+bat,Mammal,NA,NA,NA,NA,NA,NA,NA
+bat_bird?,Vertebrate,NA,NA,NA,NA,NA,NA,NA
+Bettongia_gaimardi,Mammal,Potoroidae,Bettongia,gaimardi,NT,herbivore?,it also consume insects to some amount,1660
+Bicycle,Vehicle,NA,NA,NA,NA,NA,NA,NA
+Biker,Vehicle,NA,NA,NA,NA,NA,NA,NA
+bird,Bird,NA,NA,NA,NA,NA,NA,NA
+boar_and_coyote,Mammal,NA,NA,NA,NA,NA,NA,NA
+Bos_gaurus,Mammal,Bovidae,Bos,gaurus,VU,herbivore,NA,665200
+Bos_javanicus,Mammal,Bovidae,Bos,javanicus,CR,herbivore,NA,627000
+Domestic_Bos_taurus,Domestic_mammal,Bovidae,Bos,taurus,NA,herbivore,NA,613000
+Boselaphus_tragocamelus,Mammal,Bovidae,Boselaphus,tragocamelus,LC,herbivore,NA,181000
+Bovidae_spp,Mammal,Bovidae,NA,NA,NA,herbivore,NA,118152
+Brachyteles_hypoxanthus,Mammal,Atelidae,Brachyteles,hypoxanthus,CR,frugivore,NA,6939.230769
+Bubalus_arnee,Mammal,Bovidae,Bubalus,arnee,EN,herbivore,NA,919000
+Domestic_Bubalus_bubalis,Domestic_mammal,Bovidae,Bubalus,bubalis,LC,herbivore,NA,919000
+Bubalus_bubalis,Mammal,Bovidae,Bubalus,bubalis,NA,herbivore,NA,919000
+Bubalus_depressicornis,Mammal,Bovidae,Bubalus,depressicornis,EN,herbivore,"cited as ""anoa"". May be Bubalus depressicornis or B. quarlesi",255000
+Bubo_sumatranus,Bird,NA,NA,NA,NA,NA,NA,NA
+Bucerotidae_spp,Bird,Bucerotidae,NA,NA,NA,NA,NA,NA
+Butorides_striata,Bird,Ardeidae,NA,NA,NA,NA,NA,NA
+Butterfly,Invertebrate,NA,NA,NA,NA,NA,NA,NA
+Cabassous_sp.,Mammal,Dasypodidae,Cabassous,NA,NA,insectivore,NA,3000
+Cabassous_tatouay,Mammal,Dasypodidae,Cabassous,tatouay,LC,insectivore,NA,5350
+Cabassous_unicinctus,Mammal,Dasypodidae,Cabassous,unicinctus,LC,insectivore,NA,4140
+Callicebus_nigrifrons,Mammal,Pitheciidae,Callicebus,nigrifrons,NT,omnivore,NA,1216.666667
+Callithrix_geoffroyi,Mammal,Callitrichidae,Callithrix,geoffroyi,LC,omnivore,NA,342
+Callithrix_penicillata,Mammal,Callitrichidae,Callithrix,penicillata,NA,omnivore,NA,340
+Callithrix_sp.,Mammal,Callitrichidae,Callithrix,NA,NA,omnivore,NA,304.0243902
+Callosciurus_adamsi,Mammal,Sciuridae,Callosciurus,adamsi,NT,herbivore,NA,209
+Callosciurus_caniceps,Mammal,Sciuridae,Callosciurus,caniceps,LC,herbivore,NA,265
+Callosciurus_erythraeus,Mammal,Sciuridae,Callosciurus,erythraeus,LC,herbivore,NA,283
+Callosciurus_finlaysonii,Mammal,Sciuridae,Callosciurus,finlaysonii,LC,herbivore,NA,278
+Callosciurus_notatus,Mammal,Sciuridae,Callosciurus,notatus,LC,herbivore,NA,210
+Callosciurus_prevostii,Mammal,Sciuridae,Callosciurus,prevostii,LC,herbivore,NA,400
+Callosciurus_sp.,Mammal,Sciuridae,Callosciurus,NA,NA,herbivore,NA,300
+Caloenas_nicobarica,Bird,Columbidae,Caloenas,nicobarica,NA,NA,NA,NA
+Camelus_dromedarius,Mammal,Camelidae,Camelus,dromedarius,NA,herbivore,NA,488000
+Camera_Trapper,Human,Hominidae,Homo_trapper,sapiens_trapper,LC,omnivore,I think this should be excluded. A Trapper sets all cameras and remove all cameras.,58700
+Canidae_spp,Mammal,Canidae,NA,NA,NA,carnivore,NA,8260
+Canis_aureus,Mammal,Canidae,Canis,aureus,LC,omnivore,NA,9680
+Canis_latrans,Mammal,Canidae,Canis,latrans,LC,omnivore?,It eats a lot of weird stuff,12000
+Canis_lupus_dingo,Mammal,Canidae,Canis,lupus_dingo,VU,carnivore,NA,20000
+Domestic_Canis_lupus_familiaris,Domestic_mammal,Canidae,Canis,lupus_familiaris,NA,carnivore,NA,10000
+Capricornis_milneedwardsii,Mammal,Bovidae,Capricornis,milneedwardsii,NT,herbivore,NA,150000
+Capricornis_sp.,Mammal,Bovidae,Capricornis,NA,NA,herbivore,NA,1.00E+05
+Capricornis_sumatraensis,Mammal,Bovidae,Capricornis,sumatraensis,VU,herbivore,NA,80000
+Caprimulgidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Caprimulgus_affinis,Bird,NA,NA,NA,NA,NA,NA,NA
+Cariama_cristata,Bird,NA,Cariama,cristata,NA,NA,NA,NA
+Carpococcyx_radiceus,Bird,NA,NA,NA,NA,NA,NA,NA
+Carpococcyx_renauldi,Bird,NA,NA,NA,NA,NA,NA,NA
+Carpococcyx_viridis,Bird,NA,NA,NA,NA,NA,NA,NA
+Casuarius_bennetti,Bird,NA,NA,NA,NA,NA,NA,NA
+Casuarius_unappendiculatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Catopuma_badia,Mammal,Felidae,Catopuma,badia,NT,carnivore,,3430
+Catopuma_temminckii,Mammal,Felidae,Catopuma,temminckii,NT,carnivore,synonim of Pardofelis temminckii,7740
+Cavia_sp.,Mammal,Caviidae,Cavia,NA,NA,herbivore,NA,600
+Centropus_bengalensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Centropus_goliath,Bird,NA,NA,NA,NA,NA,NA,NA
+Centropus_phasianinus,Bird,NA,NA,NA,NA,NA,NA,NA
+Centropus_sinensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Centropus_sp.,Bird,NA,NA,NA,NA,NA,NA,NA
+Cerdocyon_thous,Mammal,Canidae,Cerdocyon,thous,LC,carnivore,NA,5740
+Cervidae_spp,Mammal,Cervidae,NA,NA,NA,herbivore,NA,70156
+Cervus_canadensis,Mammal,Cervidae,Cervus,canadensis,LC,herbivore,NA,275000
+Cervus_elaphus,Mammal,Cervidae,Cervus,elaphus,LC,herbivore,NA,240000
+Chalcophaps_indica,Bird,NA,NA,NA,NA,NA,NA,NA
+Chalcophaps_stephani,Bird,NA,NA,NA,NA,NA,NA,NA
+Chlamydera_nuchalis,Bird,NA,NA,NA,NA,NA,NA,NA
+Chrysocyon_brachyurus,Mammal,Canidae,Chrysocyon,brachyurus,NT,carnivore,NA,23300
+Ciconia_stormi,Bird,NA,NA,NA,NA,NA,NA,NA
+Cincloramphus_mathewsi,Bird,NA,NA,NA,NA,NA,NA,NA
+Claravis_petriosa,Bird,NA,Claravis,petriosa,NA,NA,NA,NA
+Coendou_prehensilis,Mammal,Erethizontidae,Coendou,prehensilis,LC,herbivore,NA,4120
+Colaptes_melanochloros,Bird,NA,Colaptes,melanochloros,NA,NA,NA,NA
+Columbidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Columbina_squammata,Bird,NA,Columbina,squammata,NA,NA,NA,NA
+Columbina_talpacoti,Bird,NA,Columbina,talpacoti,NA,NA,NA,NA
+Conepatus_chinga,Mammal,Mephitidae,Conepatus,chinga,LC,omnivore,NA,1920
+Conepatus_semistriatus,Mammal,Mephitidae,Conepatus,semistriatus,LC,omnivore,NA,2020
+Conopophaga_lineata,Bird,NA,Conopophaga,lineata,NA,NA,NA,NA
+Copsychus_malabaricus,Bird,NA,NA,NA,NA,NA,NA,NA
+Copsychus_pyrropygus,Bird,NA,NA,NA,NA,NA,NA,NA
+Copsychus_saularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Coracina_novaehollandiae,Bird,NA,NA,NA,NA,NA,NA,NA
+Corvus_bennetti,Bird,NA,NA,NA,NA,NA,NA,NA
+Corvus_orru,Bird,NA,NA,NA,NA,NA,NA,NA
+Corythopis_delalandi,Bird,NA,Corythopis,delalandi,NA,NA,NA,NA
+Excalfactoria_chinensis,Bird,NA,Excalfactoria,chinensis,NA,NA,NA,NA
+Cracticus_nigrogularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Crax_fasciolata,Bird,NA,Crax,fasciolata,NA,NA,NA,NA
+Crocodylus_siamensis,Reptile,NA,NA,NA,NA,NA,NA,50000
+Crypturellus_sp.,Bird,NA,Crypturellus,NA,NA,NA,NA,NA
+Cuniculus_paca,Mammal,Cuniculidae,Cuniculus,paca,LC,herbivore,NA,6198.333333
+Cuon_alpinus,Mammal,Canidae,Cuon,alpinus,EN,carnivore,NA,15900
+cuscus?,Mammal,NA,NA,NA,NA,NA,This may be several species  of marsupials or a primate species,NA
+Cyanocorax_chrysops,Bird,NA,Cyanocorax,chrysops,NA,NA,NA,NA
+Cynogale_bennettii,Mammal,Viverridae,Cynogale_bennettii,Cynogale_bennettii,EN,omnivore,NA,4250
+Dactylopsila_trivirgata,Mammal,Petauridae,Dactylopsila,trivirgata,LC,omnivore,NA,413
+Dama_dama,Mammal,Cervidae,Dama,dama,LC,herbivore,NA,56200
+Dasypodidae,Mammal,NA,NA,NA,NA,insectivore,NA,4841
+Dasyprocta_azarae,Mammal,Dasyproctidae,Dasyprocta,azarae,DD,herbivore,NA,2980
+Dasyprocta_leporina,Mammal,Dasyproctidae,Dasyprocta,leporina,LC,herbivore,NA,3020
+Dasyprocta_sp.,Mammal,Dasyproctidae,Dasyprocta,NA,NA,herbivore,NA,3073
+Dasypus_novemcinctus,Mammal,Dasypodidae,Dasypus,novemcinctus,LC,insectivore,NA,4000
+Dasypus_septemcinctus,Mammal,Dasypodidae,Dasypus,septemcinctus,LC,insectivore,NA,1530
+Dasypus_sp.,Mammal,Dasypodidae,Dasypus,NA,NA,insectivore,NA,3720
+Dasyurus_maculatus,Mammal,Dasyuridae,Dasyurus,maculatus,NT,carnivore,NA,3360
+Dasyurus_viverrinus,Mammal,Dasyuridae,Dasyurus,viverrinus,EN,carnivore,eats some small amount of fruits,1130
+Dendrolagus_inustus,Mammal,Macropodidae,Dendrolagus,inustus,VU,herbivore,NA,12600
+Dendrolagus_ursinus,Mammal,Macropodidae,Dendrolagus,ursinus,VU,herbivore,NA,13300
+Dendronanthus_indicus,Bird,NA,NA,NA,NA,NA,NA,NA
+Dicrurus_paradiseus,Bird,NA,NA,NA,NA,NA,NA,NA
+Didelphis_albiventris,Mammal,Didelphidae,Didelphis,albiventris,LC,omnivore,NA,1040
+Didelphis_aurita,Mammal,Didelphidae,Didelphis,aurita,LC,omnivore,NA,1110
+Didelphis_marsupialis,Mammal,Didelphidae,Didelphis,marsupialis,LC,omnivore,NA,1150
+Didelphis_sp.,Mammal,Didelphidae,Didelphis,NA,NA,omnivore,NA,1442
+Didelphis_virginiana,Mammal,Didelphidae,Didelphis,virginiana,LC,omnivore,NA,2470
+Dinopium_benghalense,Bird,NA,NA,NA,NA,NA,NA,NA
+Diplogale_derbyanus,Mammal,Viverridae,Diplogale?,derbyanus?,NA,carnivore,NA,1400
+Diplogale_hosei,Mammal,Viverridae,Diplogale,hosei,VU,carnivore,NA,1500
+Dipodomys_sp.,Mammal,Heteromyidae,Dipodomys,NA,NA,herbivore,NA,72
+Dirt_bike,Vehicle,NA,NA,NA,NA,NA,NA,NA
+Domestic_livestock,Domestic_mammal,NA,NA,NA,NA,herbivore,NA,919000
+Dorcopsis_hageni,Mammal,Macropodidae,Dorcopsis,hageni,NA,herbivore,NA,5500
+Dorcopsis_muelleri,Mammal,Macropodidae,Dorcopsis,muelleri,NA,herbivore,NA,5410
+Draco_volans,Reptile,NA,NA,NA,NA,NA,NA,NA
+Dremomys_rufigenis,Mammal,Sciuridae,Dremomys,rufigenis,LC,herbivore,NA,201
+Ducula_badia,Bird,NA,NA,NA,NA,NA,NA,NA
+Echimyidae_spp,Mammal,Echimyidae,NA,NA,NA,herbivore,"Assumed based on ""Spiny_Rat""",320
+Echinosorex_gymnura,Mammal,Erinaceidae,Echinosorex,gymnura,LC,omnivore,NA,1000
+Eira_barbara,Mammal,Mustelidae,Eira,barbara,LC,omnivore,NA,4140
+Elephas_maximus,Mammal,Elephantidae,Elephas,maximus,EN,herbivore,NA,3320000
+Domestic_Elephas_maximus,Domestic_mammal,Elephantidae,Elephas,maximus,NA,herbivore,NA,3320000
+Enicurus_leschenaulti,Bird,NA,NA,NA,NA,NA,NA,NA
+Domestic_Equus_africanus_asinus,Domestic_mammal,Equidae,Equus,africanus_asinus,LC,herbivore,NA,180000
+Domestic_Equus_ferus_caballus,Domestic_mammal,Equidae,Equus,ferus_caballus,LC,herbivore,NA,4.00E+05
+Erythropitta_sp.,Bird,NA,NA,NA,NA,NA,NA,NA
+Erythropitta_ussheri,Bird,NA,NA,NA,NA,NA,NA,NA
+Estrilda_astrild,Bird,NA,NA,NA,NA,NA,NA,NA
+Eupetes_macrocerus,Bird,NA,NA,NA,NA,NA,NA,NA
+Euphractus_sexcinctus,Mammal,Chlamyphoridae,Euphractus,sexcinctus,LC,omnivore?,eats invertebrates but also carrion,4780
+Eurostopodus_argus,Bird,NA,NA,NA,NA,NA,NA,NA
+Eutropis_multifasciata,Reptile,NA,NA,NA,NA,NA,NA,NA
+Falco_berigora,Bird,NA,NA,NA,NA,NA,NA,NA
+Felidae_spp,Mammal,Felidae,NA,NA,NA,carnivore,Weight based on genus Felis (considering that would be dificult to not identify a big cat),4300
+Domestic_Felis_catus,Domestic_mammal,Felidae,Felis,catus,NA,carnivore,NA,4266
+Felis_chaus,Mammal,Felidae,Felis,chaus,LC,carnivore,NA,7170
+Ficedula_zanthopygia,Bird,NA,NA,NA,NA,NA,NA,NA
+flycatcher,Bird,NA,NA,NA,NA,NA,NA,NA
+Francolinus_pintadeanus,Bird,NA,NA,NA,NA,NA,NA,NA
+frog,Amphibian,NA,NA,NA,NA,NA,NA,NA
+Galeopterus_variegatus,Mammal,Cynocephalidae,Galeopterus,variegatus,LC,herbivore,NA,1110
+Galictis_cuja,Mammal,Mustelidae,Galictis,cuja,LC,carnivore,NA,1000
+Gallicolumba_tristigmata,Bird,NA,NA,NA,NA,NA,NA,NA
+Galloperdix_spadicea,Bird,NA,NA,NA,NA,NA,NA,NA
+Gallus_gallus,Bird,NA,NA,NA,NA,NA,NA,NA
+Domestic_Gallus_gallus,Domestic_bird,NA,Gallus,gallus,NA,NA,NA,NA
+Gallus_sonneratii,Bird,NA,NA,NA,NA,NA,NA,NA
+Gallus_sp.,Bird,NA,Gallus,NA,NA,NA,NA,NA
+Garrulax_canorus,Bird,NA,NA,NA,NA,NA,NA,NA
+Garrulax_leucolophus,Bird,NA,NA,NA,NA,NA,NA,NA
+Garrulax_maesi,Bird,NA,NA,NA,NA,NA,NA,NA
+Garrulax_palliatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Geokichla_interpres,Bird,NA,NA,NA,NA,NA,NA,NA
+Geopelia_cuneata,Bird,NA,NA,NA,NA,NA,NA,NA
+Geopelia_striata,Bird,NA,NA,NA,NA,NA,NA,NA
+Geotrygon_montana,Bird,NA,Geotrygon,montana,NA,NA,NA,NA
+Geotrygon_violacea,Bird,NA,Geotrygon,violacea,NA,NA,NA,NA
+Gorsachius_melanolophus,Bird,NA,NA,NA,NA,NA,NA,NA
+Goura_victoria,Bird,NA,NA,NA,NA,NA,NA,NA
+Gracilinanus_agilis,Mammal,Didelphidae,Gracilinanus,agilis,NA,insectivore,NA,22.1
+Gracilinanus_microtarsus,Mammal,Didelphidae,Gracilinanus,microtarsus,NA,insectivore,NA,29.6
+Gracilinanus_sp.,Mammal,Didelphidae,Gracilinanus,NA,NA,insectivore,NA,27.66666667
+Gracula_religiosa,Bird,NA,NA,NA,NA,NA,NA,NA
+Grallina_cyanoleuca,Bird,NA,NA,NA,NA,NA,NA,NA
+Guerlinguetus_brasiliensis,Mammal,Sciuridae,Guerlinguetus,brasiliensis,LC,herbivore,NA,165.1666667
+Guira_guira,Bird,NA,Guira,guira,NA,NA,NA,NA
+Gymnocrex_rosenbergii,Bird,NA,NA,NA,NA,NA,NA,NA
+Gymnorhina_tibicen,Bird,NA,NA,NA,NA,NA,NA,NA
+Habroptila_wallacii,Bird,NA,NA,NA,NA,NA,NA,NA
+Haematortyx_sanguiniceps,Bird,NA,NA,NA,NA,NA,NA,NA
+Halcyon_coromanda,Bird,NA,NA,NA,NA,NA,NA,NA
+Halcyon_smyrnensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Haliaeetus_ichthyaetus,Bird,NA,NA,NA,NA,NA,NA,NA
+Haliastur_indus,Bird,NA,NA,NA,NA,NA,NA,NA
+Hamirostra_melanosternon,Bird,NA,NA,NA,NA,NA,NA,NA
+Helarctos_malayanus,Mammal,Ursidae,Helarctos,malayanus,VU,omnivore,NA,57000
+Hemigalus_derbyanus,Mammal,Viverridae,Hemigalus,derbyanus,NT,carnivore,Insects are 90% of diet. did not eat plants or fruits,1270
+Hemixos_cinereus,Bird,NA,NA,NA,NA,NA,NA,NA
+Herpestes_brachyurus,Mammal,Herpestidae,Herpestes,brachyurus,NT,omnivore,NA,1400
+Herpestes_edwardsi,Mammal,Herpestidae,Herpestes,edwardsi,LC,omnivore,NA,1300
+Herpestes_edwardsii,Mammal,Herpestidae,Herpestes,edwardsii,LC,carnivore,NA,1310
+Herpestes_javanicus,Mammal,Herpestidae,Herpestes,javanicus,LC,omnivore,NA,765
+Herpestes_semitorquatus,Mammal,Herpestidae,Herpestes,semitorquatus,NT,omnivore?,NA,2170
+Herpestes_smithii,Mammal,Herpestidae,Herpestes,smithii,LC,omnivore?,NA,1700
+Herpestes_sp.,Mammal,Herpestidae,Herpestes,NA,NA,omnivore,NA,1854
+Herpestes_urva,Mammal,Herpestidae,Herpestes,urva,LC,carnivore,NA,2380
+Herpestes_vitticollis,Mammal,Herpestidae,Herpestes,vitticollis,LC,carnivore,NA,2380
+Herpestidae_spp,Mammal,Herpestidae,NA,NA,NA,carnivore,NA,1460
+Heterophasia_picaoides,Bird,NA,NA,NA,NA,NA,NA,NA
+homo_sapien_&_Canis_lupus_familiaris,Mammal,NA,NA,NA,NA,NA,NA,NA
+Homo_sapiens,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Homo_sapiens_equestrian,Human,NA,NA,NA,NA,omnivore,NA,458700
+Homo_sapiens_hiker,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Homo_sapiens_poacher,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Homo_sapiens_ranger,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Homo_sapiens_researcher,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Homo_sapiens_tourist,Human,Hominidae,Homo,sapiens,NA,omnivore,NA,58700
+Horizocerus_albocristatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrochoerus_hydrochaeris,Mammal,Caviidae,Hydrochoerus,hydrochaeris,LC,herbivore,NA,17450
+Hydropsalis_parvula,Bird,NA,Hydropsalis,parvula,NA,NA,NA,NA
+Hydrornis_baudii,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_irena,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_schneideri,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_schwaneri,Bird,NA,NA,NA,NA,NA,NA,NA
+Hyelaphus_porcinus,Mammal,Cervidae,Hyelaphus,porcinus,EN,herbivore,NA,37100
+Hylobates_agilis,Mammal,Hylobatidae,Hylobates,agilis,EN,herbivore,NA,5860
+Hylobates_lar,Mammal,Hylobatidae,Hylobates,lar,EN,herbivore,NA,5630
+Hylobates_muelleri,Mammal,Hylobatidae,Hylobates,muelleri,EN,herbivore,NA,5930
+Hystricidae_or_Erethizontidae,Mammal,NA,NA,NA,NA,herbivore,Hystricidae for the Old world. Erethizontidae for the New world,NA
+Hystricidae_spp,Mammal,Hystricidae,NA,NA,NA,herbivore,NA,7263
+Hystrix_brachyura,Mammal,Hystricidae,Hystrix,brachyura,LC,herbivore,NA,8000
+Hystrix_crassispinis,Mammal,Hystricidae,Hystrix,crassispinis,LC,herbivore,NA,4590
+Hystrix_indica,Mammal,Hystricidae,Hystrix,indica,LC,herbivore,NA,14300
+Hystrix_sp.,Mammal,Hystricidae,Hystrix,NA,NA,herbivore,NA,9790
+Insect,Invertebrate,NA,NA,NA,NA,NA,NA,NA
+Iomys_horsfieldii,Mammal,Sciuridae,Iomys,horsfieldii,LC,herbivore,NA,156
+Isoodon_obesulus,Mammal,Peramelidae,Isoodon,obesulus,LC,omnivore,NA,825
+Ixobrychus_eurhythmus,Bird,NA,NA,NA,NA,NA,NA,NA
+Juliomys_pictipes,Mammal,Cricetidae,Juliomys,pictipes,LC,NA,NA,18.41777778
+Kenopia_striata,Bird,NA,NA,NA,NA,NA,NA,NA
+Ketupa_ketupu,Bird,NA,NA,NA,NA,NA,NA,NA
+Lagorchestes_conspicillatus,Mammal,Macropodidae,Lagorchestes,conspicillatus,LC,herbivore,NA,2820
+Lalage_sueurii,Bird,NA,NA,NA,NA,NA,NA,NA
+Lanius_tigrinus,Bird,NA,NA,NA,NA,NA,NA,NA
+Lariscus_hosei,Mammal,Sciuridae,Lariscus,hosei,NT,herbivore,NA,180
+Lariscus_insignis,Mammal,Sciuridae,Lariscus,insignis,LC,herbivore,NA,175
+Larvivora_cyane,Bird,NA,NA,NA,NA,NA,NA,NA
+Legatus_leucophaius,Bird,NA,Legatus,leucophaius,NA,NA,NA,NA
+Leopardus_guttulus,Mammal,Felidae,Leopardus,guttulus,VU,carnivore,NA,2441.190476
+Leopardus_pardalis,Mammal,Felidae,Leopardus,pardalis,LC,carnivore,NA,11900
+Leopardus_sp.,Mammal,Felidae,Leopardus,NA,NA,carnivore,NA,5793
+Leopardus_wiedii,Mammal,Felidae,Leopardus,wiedii,NT,carnivore,NA,3270
+Leopoldamys_sabanus,Mammal,Muridae,Leopoldamys,sabanus,LC,omnivore,NA,351
+Leporidae_spp,Mammal,Leporidae,NA,NA,NA,herbivore,NA,2143
+Leptobrachium_nigrops,Amphibian,NA,NA,NA,NA,NA,NA,NA
+Leptoptilos_javanicus,Bird,NA,NA,NA,NA,NA,NA,NA
+Leptotila_rufaxilla,Bird,NA,Leptotila,rufaxilla,NA,NA,NA,NA
+Leptotila_sp.,Bird,NA,Leptotila,NA,NA,NA,NA,NA
+Leptotila_verreauxi,Bird,NA,Leptotila,verreauxi,NA,NA,NA,NA
+Lepus_californicus,Mammal,Leporidae,Lepus,californicus,LC,herbivore,NA,2420
+Lepus_europaeus,Mammal,Leporidae,Lepus,europaeus,LC,herbivore,NA,3820
+Lepus_nigricollis,Mammal,Leporidae,Lepus,nigricollis,LC,herbivore,NA,2300
+Lepus_peguensis,Mammal,Leporidae,Lepus,peguensis,LC,herbivore,NA,2280
+Lichenostomus_virescens,Bird,NA,NA,NA,NA,NA,NA,NA
+Lichmera_indistincta,Bird,NA,NA,NA,NA,NA,NA,NA
+Lizard,Reptile,NA,NA,NA,NA,NA,NA,NA
+Lophura bulweri,Bird,NA,Lophura,bulweri,NA,NA,NA,NA
+Lontra_canadensis,Mammal,Mustelidae,Lontra,canadensis,LC,picivore_carnivore,,8090
+Lontra_longicaudis,Mammal,Mustelidae,Lontra,longicaudis,NT,picivore_carnivore,Mainly fish. but also eat crustaces. moluscs. and small reptiles. mammals and birds,6550
+Lophura_bulweri,Bird,NA,NA,NA,NA,NA,NA,NA
+Lophura_diardi,Bird,NA,NA,NA,NA,NA,NA,NA
+Lophura_erythrophthalma,Bird,NA,NA,NA,NA,NA,NA,NA
+Lophura_ignita,Bird,NA,NA,NA,VU,Omnivore,NA,NA
+Lophura_inornata,Bird,NA,NA,NA,NA,NA,NA,NA
+Lophura_nycthemera,Bird,NA,NA,NA,NA,NA,NA,NA
+Lophura_rufa,Bird,NA,NA,NA,NA,NA,NA,NA
+Luscinia_cyane,Bird,NA,NA,NA,NA,NA,NA,NA
+Lutra_lutra,Mammal,Mustelidae,Lutra,lutra,NT,picivore_carnivore,Mainly fish. but also eat crustaces. moluscs. and small reptiles. mammals and birds,8860
+Lutrinae,Mammal,Mustelidae,NA,NA,NA,picivore_carnivore,subfamily lutrinae. Weight based on Lutra and Lontra genus,7000
+Lutrogale_perspicillata,Mammal,Mustelidae,Lutrogale,perspicillata,VU,picivore_carnivore,Mainly fish. but also eat crustaces. moluscs. and small reptiles. mammals and birds,9000
+Lycalopex_gymnocercus,Mammal,Canidae,Lycalopex,gymnocercus,LC,omnivore,NA,4183.333333
+Lynx_rufus,Mammal,Felidae,Lynx,rufus,LC,carnivore,NA,6390
+Macaca_nigra,Mammal,Cercopithecidae,Macaca,nigra,CR,omnivore,NA,7380
+Macaca_arctoides,Mammal,Cercopithecidae,Macaca,arctoides,VU,frugivore,NA,9400
+Macaca_fascicularis,Mammal,Cercopithecidae,Macaca,fascicularis,LC,omnivore,NA,4590
+Macaca_leonina,Mammal,Cercopithecidae,Macaca,leonina,VU,frugivore,NA,7380
+Macaca_mulatta,Mammal,Cercopithecidae,Macaca,mulatta,LC,frugivore,NA,6450
+Macaca_nemestrina,Mammal,Cercopithecidae,Macaca,nemestrina,VU,herbivore,NA,7870
+Macaca_ochreata,Mammal,Cercopithecidae,Macaca,ochreata,VU,omnivore,Macaca ochreata brunnescens,2750
+Macaca_radiata,Mammal,Cercopithecidae,Macaca,radiata,LC,frugivore,NA,5000
+Macaca_sp.,Mammal,Cercopithecidae,Macaca,NA,NA,frugivore,NA,7375
+Macrocephalon_maleo,Bird,NA,NA,NA,NA,NA,NA,NA
+Macronous_gularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Macropodidae_spp,Mammal,Macropodidae,NA,NA,NA,herbivore,NA,8850
+Macropus_agilis,Mammal,Macropodidae,Macropus,agilis,LC,herbivore,NA,11900
+Macropus_robustus,Mammal,Macropodidae,Macropus,robustus,LC,herbivore,NA,26000
+Macropus_rufogriseus,Mammal,Macropodidae,Macropus,rufogriseus,LC,herbivore,NA,16800
+Macropus_rufus,Mammal,Macropodidae,Macropus,rufus,LC,herbivore,NA,39000
+Malacocincla_abbotti,Bird,NA,NA,NA,NA,NA,NA,NA
+Malacocincla_malaccensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Malacopteron_affine,Bird,NA,NA,NA,NA,NA,NA,NA
+Malacopteron_albogulare,Bird,NA,NA,NA,NA,NA,NA,NA
+Malacoptila_striata,Bird,NA,Malacoptila,striata,NA,NA,NA,NA
+Malurus_lamberti,Bird,NA,NA,NA,NA,NA,NA,NA
+Malurus_melanocephalus,Bird,NA,NA,NA,NA,NA,NA,NA
+Mammalia,Mammal,NA,NA,NA,NA,NA,NA,NA
+Manidae_spp,Mammal,Manidae,NA,NA,NA,insectivore,NA,9534
+Manis_crassicaudata,Mammal,Manidae,Manis,crassicaudata,EN,insectivore,NA,8020
+Manis_javanica,Mammal,Manidae,Manis,javanica,CR,insectivore,NA,4860
+Manorina_flavigula,Bird,NA,NA,NA,NA,NA,NA,NA
+Manouria_emys,Reptile,Testudinidae,Manouria,emys,CR,NA,NA,NA
+Marmosops_sp.,Mammal,Didelphidae,Marmosops,NA,NA,omnivore,NA,34.4375
+Marsupial,Mammal,NA,NA,NA,NA,omnivore,NA,NA
+Martes_americana,Mammal,Mustelidae,Martes,americana,LC,carnivore,NA,882
+Martes_flavigula,Mammal,Mustelidae,Martes,flavigula,LC,carnivore,NA,2500
+Maxomys_baeodon,Mammal,Muridae,Maxomys,baeodon,DD,omnivore,herbivore?,159
+Maxomys_ochraceiventer,Mammal,Muridae,Maxomys,ochraceiventer,DD,omnivore,herbivore?,159
+Maxomys_rajah,Mammal,Muridae,Maxomys,rajah,VU,omnivore,herbivore?,150
+Maxomys_sp.,Mammal,Muridae,Maxomys,NA,NA,omnivore,herbivore?,130
+Maxomys_surifer,Mammal,Muridae,Maxomys,surifer,LC,omnivore,herbivore?,150
+Maxomys_whiteheadi,Mammal,Muridae,Maxomys,whiteheadi,VU,omnivore,herbivore?,59.2
+Mazama_americana,Mammal,Cervidae,Mazama,americana,DD,herbivore,NA,20300
+Mazama_gouazoubira,Mammal,Cervidae,Mazama,gouazoubira,LC,herbivore,NA,13855
+Mazama_nana,Mammal,Cervidae,Mazama,nana,VU,herbivore,NA,16500
+Mazama_sp.,Mammal,Cervidae,Mazama,NA,NA,herbivore,NA,17783
+Megapodius_cumingii,Bird,NA,NA,NA,NA,NA,NA,NA
+Megapodius_decollatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Megapodius_freycinet,Bird,NA,NA,NA,NA,NA,NA,NA
+Melanodryas_cucullata,Bird,NA,NA,NA,NA,NA,NA,NA
+Meliphagidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Melogale_moschata,Mammal,Mustelidae,Melogale,moschata,LC,omnivore,NA,1200
+Melogale_personata,Mammal,Mustelidae,Melogale,personata,LC,omnivore,NA,1850
+Melogale_sp.,Mammal,Mustelidae,Melogale,NA,NA,omnivore,NA,1394
+Melopsittacus_undulatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Melursus_ursinus,Mammal,Ursidae,Melursus,ursinus,VU,omnivore,NA,98900
+Menetes_berdmorei,Mammal,Sciuridae,Menetes,berdmorei,LC,herbivore,Body mass not reliable,300
+Mephitis_mephitis,Mammal,Mephitidae,Mephitis,mephitis,LC,carnivore,NA,2400
+Merops_ornatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Mesembrinibis_cayennensis,Bird,NA,Mesembrinibis,cayennensis,NA,NA,NA,NA
+Metachirus_nudicaudatus,Mammal,Didelphidae,Metachirus,nudicaudatus,LC,omnivore,NA,367
+Micoureus_demerarae,Mammal,Didelphidae,Micoureus,demerarae,LC,omnivore,NA,111
+Milvago_chimachima,Bird,NA,Milvago,chimachima,NA,NA,NA,NA
+Momotus_momota,Bird,NA,Momotus,momota,NA,NA,NA,NA
+Monodelphis_sp.,Mammal,Didelphidae,Monodelphis,NA,NA,insectivore,may consume some seeds in smaller amounts,19.08571429
+Moschiola_indica,Mammal,Tragulidae,Moschiola,indica,LC,herbivore,NA,3000
+Moschiola_meminna,Mammal,Tragulidae,Moschiola,meminna,LC,herbivore,NA,3090
+Motacilla_sp.,Bird,NA,NA,NA,NA,NA,NA,NA
+Muntiacus_atherodes,Mammal,Cervidae,Muntiacus,atherodes,NT,herbivore,NA,18800
+Muntiacus_montanus,Mammal,Cervidae,Muntiacus,montanus,DD,herbivore,NA,17350
+Muntiacus_muntjak,Mammal,Cervidae,Muntiacus,muntjak,LC,herbivore,omnivore? eats grass. fruit. shoots. seeds. bird eggs. and small animals. and occasionally scavenges on carrion,17400
+Muntiacus_reevesi,Mammal,Cervidae,Muntiacus,reevesi,LC,herbivore,NA,13500
+Muntiacus_sp.,Mammal,Cervidae,Muntiacus,NA,NA,herbivore,omnivore? eats grass. fruit. shoots. seeds. bird eggs. and small animals. and occasionally scavenges on carrion,17350
+Muntiacus_vaginalis,Mammal,Cervidae,Muntiacus,vaginalis,LC,herbivore,NA,17350
+Muridae_spp,Mammal,Muridae,NA,NA,NA,omnivore,diet based on the family,108
+Muscicapa_dauurica,Bird,NA,NA,NA,NA,NA,NA,NA
+Mustela_nudipes,Mammal,Mustelidae,Mustela,nudipes,LC,carnivore,NA,569
+Mustelidae_spp,Mammal,Mustelidae,NA,NA,NA,carnivore,NA,4285
+Mydaus_javanensis,Mammal,Mephitidae,Mydaus,javanensis,LC,omnivore,NA,2500
+Mydaus_marchei,Mammal,Mephitidae,Mydaus,marchei,LC,carnivore,NA,2500
+Myiothlypis_flaveola,Bird,NA,Myiothlypis,flaveola,NA,NA,NA,NA
+Myocastor_coypus,Mammal,Echimyidae,Myocastor,coypus,LC,herbivore,NA,6360
+Myophonus_caeruleus,Bird,NA,NA,NA,NA,NA,NA,NA
+Myophonus_melanurus,Bird,NA,NA,NA,NA,NA,NA,NA
+Myrmecophaga_tridactyla,Mammal,Myrmecophagidae,Myrmecophaga,tridactyla,VU,insectivore,NA,27900
+Naja_sumatrana,Reptile,NA,NA,NA,NA,NA,NA,NA
+Nasua_nasua,Mammal,Procyonidae,Nasua,nasua,LC,omnivore,NA,3790
+Nectomys_squamipes,Mammal,Cricetidae,Nectomys,squamipes,LC,omnivore,NA,185
+Neofelis_diardi,Mammal,Felidae,Neofelis,diardi,VU,carnivore,NA,15100
+Neofelis_nebulosa,Mammal,Felidae,Neofelis,nebulosa,VU,carnivore,NA,15100
+Neotoma_fuscipes,Mammal,Cricetidae,Neotoma,fuscipes,LC,herbivore?,mustly herbivore but it eats some worms and insects,224
+Nesolagus_netscheri,Mammal,Leporidae,Nesolagus,netscheri,DD,herbivore,NA,1520
+Ninox_novaeseelandiae,Bird,NA,NA,NA,NA,NA,NA,NA
+Nisaetus_alboniger,Bird,NA,NA,NA,NA,NA,NA,NA
+Nisaetus_cirrhatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Niviventer_cremoriventer,Mammal,Muridae,Niviventer,cremoriventer,LC,omnivore,Search for diet info,71.3
+Nyctidromus_sp.,Bird,NA,Nyctidromus,NA,NA,NA,NA,NA
+Ocyphaps_lophotes,Bird,NA,NA,NA,NA,NA,NA,NA
+Odocoileus_hemionus,Mammal,Cervidae,Odocoileus,hemionus,LC,herbivore,NA,83800
+Odontophorus_capueira,Bird,NA,Odontophorus,capueira,NA,NA,NA,NA
+Orthotomus_atrogularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Orthotomus_ruficeps,Bird,NA,NA,NA,NA,NA,NA,NA
+Oryctolagus_cuniculus,Mammal,Leporidae,Oryctolagus,cuniculus,EN,herbivore,NA,1590
+Otospermophilus_beecheyi,Mammal,Sciuridae,Otospermophilus,beecheyi,LC,herbivore?,mostly herbivore but eat invertebrates and even small vertebrates,598
+Otus_lempiji,Bird,NA,NA,NA,NA,NA,NA,NA
+Ovis_aries_Domestic,Domestic_mammal,Bovidae,Ovis,aries,LC,herbivore,NA,34200
+Pachycephala_rufiventris,Bird,NA,NA,NA,NA,NA,NA,NA
+Pachyramphus_polychopterus,Bird,NA,Pachyramphus,polychopterus,NA,NA,NA,NA
+Paguma_larvata,Mammal,Viverridae,Paguma,larvata,LC,omnivore,NA,4300
+Panthera_onca,Mammal,Felidae,Panthera,onca,NT,carnivore,NA,84900
+Panthera_pardus,Mammal,Felidae,Panthera,pardus,VU,carnivore,NA,52400
+Panthera_tigris,Mammal,Felidae,Panthera,tigris,EN,carnivore,NA,163000
+Paradoxurus_hermaphroditus,Mammal,Viverridae,Paradoxurus,musangus_or_hermaphroditus,LC,omnivore,Names combined due to the taxonomic chaos,3200
+Paradoxurus_jerdoni,Mammal,Viverridae,Paradoxurus,jerdoni,LC,omnivore,NA,3580
+Pardofelis_badia,Mammal,Felidae,Pardofelis,badia,EN,carnivore,Catopuma badia?,2830
+Pardofelis_marmorata,Mammal,Felidae,Pardofelis,marmorata,NT,carnivore,NA,2830
+Passeriformes,Bird,NA,NA,NA,NA,NA,NA,NA
+Patagioenas_picazuro,Bird,NA,Patagioenas,picazuro,NA,NA,NA,NA
+Pavo_cristatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Pavo_muticus,Bird,NA,NA,NA,NA,NA,NA,NA
+Pecari_tajacu,Mammal,Tayassuidae,Pecari,tajacu,LC,omnivore,may consime invertebrates. frogs and reptiles,21300
+Pellorneidae,Bird,NA,NA,NA,NA,NA,NA,NA
+Pellorneidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Pellorneum_capistratum,Bird,NA,NA,NA,NA,NA,NA,NA
+Pellorneum_malaccense,Bird,NA,NA,NA,NA,NA,NA,NA
+Penelope_obscura,Bird,NA,Penelope,obscura,NA,NA,NA,NA
+Peramelemorphia,Mammal,NA,NA,NA,NA,NA,"cited as ""bandicoot"".  May be any bornean? Species of the order Peramelemorphia",NA
+Perameles_gunnii,Mammal,Peramelidae,Perameles,gunnii,VU,insectivore,NA,903
+Pernis_apivorus,Bird,NA,NA,NA,NA,NA,NA,NA
+Petaurista_elegans,Mammal,Sciuridae,Petaurista,elegans,LC,herbivore,NA,1040
+Phaenicophaeus_curvirostris,Bird,NA,NA,NA,NA,NA,NA,NA
+Phalanger_gymnotis,Mammal,Phalangeridae,Phalanger,gymnotis,LC,frugivore,NA,2000
+Phasianidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Philander_frenatus,Mammal,Didelphidae,Philander,frenatus,LC,omnivore,NA,251.7111111
+Philander_opossum,Mammal,Didelphidae,Philander,opossum,LC,omnivore,NA,428
+Philemon_citreogularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Phimosus_infuscatus,Bird,NA,Phimosus,infuscatus,NA,NA,NA,NA
+Piaya_cayana,Bird,NA,Piaya,cayana,NA,NA,NA,NA
+Piciformes,Bird,NA,NA,NA,NA,NA,NA,NA
+Piciformes_sp,Bird,NA,NA,NA,NA,NA,NA,NA
+Picus_puniceus,Bird,NA,NA,NA,NA,NA,NA,NA
+Pitta_guajana,Bird,NA,NA,NA,NA,NA,NA,NA
+Pitta_maxima,Bird,NA,NA,NA,NA,NA,NA,NA
+Pitta_moluccensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Pitta_sordida,Bird,NA,NA,NA,NA,NA,NA,NA
+Pittidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Podargidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Podargus_strigoides,Bird,NA,NA,NA,NA,NA,NA,NA
+Poephila_acuticauda,Bird,NA,NA,NA,NA,NA,NA,NA
+Polyplectron_bicalcaratum,Bird,NA,NA,NA,NA,NA,NA,NA
+Polyplectron_chalcurum,Bird,NA,NA,NA,NA,NA,NA,NA
+Polyplectron_malacense,Bird,NA,NA,NA,NA,NA,NA,NA
+Pomatostomus_temporalis,Bird,NA,NA,NA,NA,NA,NA,NA
+Pongo_pygmaeus,Mammal,Hominidae,Pongo,pygmaeus,CR,herbivore,sometimes consume bird eggs and insects,52100
+Pongo_sp.,Mammal,Hominidae,Pongo,NA,CR,herbivore,sometimes consume bird eggs and insects,50000
+Potorous_tridactylus,Mammal,Potoroidae,Potorous,tridactylus,NT,omnivore,NA,1090
+Presbytis_femoralis,Mammal,Cercopithecidae,Presbytis,femoralis,NT,herbivore,NA,7000
+Presbytis_frontata,Mammal,Cercopithecidae,Presbytis,frontata,VU,herbivore,NA,6160
+Presbytis_hosei,Mammal,Cercopithecidae,Presbytis,hosei,VU,herbivore,NA,6300
+Presbytis_melalophos,Mammal,Cercopithecidae,Presbytis,melalophos,EN,herbivore,NA,6470
+Presbytis_rubicunda,Mammal,Cercopithecidae,Presbytis,rubicunda,LC,herbivore,NA,6410
+Presbytis_siamensis,Mammal,Cercopithecidae,Presbytis,siamensis,NT,herbivore,NA,6513.75
+Presbytis_sp.,Mammal,Cercopithecidae,Presbytis,NA,NA,herbivore,NA,5600
+Primates,Mammal,NA,NA,NA,NA,herbivore,NA,NA
+Priodontes_maximus,Mammal,Chlamyphoridae,Priodontes,maximus,VU,insectivore,NA,42700
+Prionailurus_bengalensis,Mammal,Felidae,Prionailurus,bengalensis,LC,carnivore,NA,2790
+Prionailurus_planiceps,Mammal,Felidae,Prionailurus,planiceps,EN,picivore_carnivore,NA,3530
+Prionailurus_rubiginosus,Mammal,Felidae,Prionailurus,rubiginosus,VU,carnivore,NA,1420
+Prionailurus_viverrinus,Mammal,Felidae,Prionailurus,viverrinus,EN,picivore_carnivore,NA,8830
+Prionodon_linsang,Mammal,Prionodontidae,Prionodon,linsang,LC,carnivore,NA,685
+Prionodon_pardicolor,Mammal,Prionodontidae,Prionodon,pardicolor,LC,carnivore,NA,1140
+Procyon_cancrivorus,Mammal,Procyonidae,Procyon,cancrivorus,LC,omnivore,NA,6950
+Procyon_lotor,Mammal,Procyonidae,Procyon,lotor,LC,omnivore,NA,6370
+Pseudocheirus_peregrinus,Mammal,Pseudocheiridae,Pseudocheirus,peregrinus,LC,herbivore,NA,894
+Pteromyini,Mammal,Sciuridae,NA,NA,NA,herbivore,Pteromini tribe,150
+Pterorhinus_perspicillatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Ptilocercus_lowii,Mammal,Ptilocercidae,Ptilocercus,lowii,LC,omnivore,eats invertebrates but also consume nectar and even naturally fermented alcoolic nectar,42.5
+Ptilotula_keartlandi,Bird,NA,NA,NA,NA,NA,NA,NA
+Puma_concolor,Mammal,Felidae,Puma,concolor,LC,carnivore,NA,53900
+Puma_yagouaroundi,Mammal,Felidae,Puma,yagouaroundi,LC,carnivore,NA,3745.872414
+Pycnonotus_goiavier,Bird,NA,NA,NA,NA,NA,NA,NA
+Pycnonotus_plumosus,Bird,NA,NA,NA,NA,NA,NA,NA
+Pycnonotus_simplex,Bird,NA,NA,NA,NA,NA,NA,NA
+Rallidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Rallina_fasciata,Bird,NA,NA,NA,NA,NA,NA,NA
+Ramphastos_toco,Bird,NA,Ramphastos,toco,NA,NA,NA,NA
+raptor,Bird,NA,NA,NA,NA,NA,NA,NA
+Rattus_annandalei,Mammal,Muridae,Rattus,annandalei,LC,omnivore,may be placed as a Sundamys species due to genetic information,198
+Rattus_lutreolus,Mammal,Muridae,Rattus,lutreolus,LC,omnivore,NA,106
+Rattus_rattus,Mammal,Muridae,Rattus,rattus,LC,omnivore,NA,143
+Rattus_sp.,Mammal,Muridae,Rattus,NA,NA,omnivore,NA,172
+Rattus_tanezumi,Mammal,Muridae,Rattus,tanezumi,LC,omnivore,NA,141
+Rattus_tiomanicus,Mammal,Muridae,Rattus,tiomanicus,LC,omnivore,NA,119
+Ratufa_affinis,Mammal,Sciuridae,Ratufa,affinis,NT,herbivore,NA,1160
+Ratufa_bicolor,Mammal,Sciuridae,Ratufa,bicolor,NT,herbivore,NA,1610
+Reptile,Reptile,NA,NA,NA,NA,NA,NA,NA
+Rheithrosciurus_macrotis,Mammal,Sciuridae,Rheithrosciurus,macrotis,NA,herbivore,NA,1350
+Rhinoceros_sondaicus,Mammal,Rhinocerotidae,Rhinoceros,sondaicus,CR,herbivore,NA,1720000
+Rhinocerotidae_spp,Mammal,Rhinocerotidae,NA,NA,NA,herbivore,NA,1563400
+Rhinosciurus_laticaudatus,Mammal,Sciuridae,Rhinosciurus,laticaudatus,NA,insectivore,cursorial insectivore squirrel,230
+Rhipidura_javanica,Bird,NA,NA,NA,NA,NA,NA,NA
+Rhizomyinae,Mammal,NA,NA,NA,NA,herbivore,NA,900
+Rhizomys_sumatrensis,Mammal,Spalacidae,Rhizomys,sumatrensis,LC,herbivore,NA,2500
+Rhyticeros_plicatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Rodent,Mammal,NA,NA,NA,NA,omnivore?,NA,400
+Rodent_or_marsupial,Mammal,NA,NA,NA,NA,omnivore?,NA,400
+Rollulus_rouloul,Bird,NA,NA,NA,NA,NA,NA,NA
+Rucervus_duvaucelii,Mammal,Cervidae,Rucervus,duvaucelii,VU,herbivore,NA,169000
+Rupornis_magnirostris,Bird,NA,Rupornis,magnirostris,NA,NA,NA,NA
+Rusa_timorensis,Mammal,Cervidae,Rusa,timorensis,VU,herbivore,NA,65800
+Rusa_unicolor,Mammal,Cervidae,Rusa,unicolor,VU,herbivore,NA,170000
+Saimiri_sciureus,Mammal,Cebidae,Saimiri,sciureus,LC,omnivore,NA,750
+Salvator_rudicolis,Reptile,NA,NA,NA,NA,NA,NA,NA
+Sapajus_apella,Mammal,Cebidae,Sapajus,apella,LC,omnivore,NA,4000
+Sapajus_nigritus,Mammal,Cebidae,Sapajus,nigritus,NT,omnivore,NA,2395.4375
+Sarcophilus_harrisii,Mammal,Dasyuridae,Sarcophilus,harrisii,EN,carnivore,NA,7000
+Scandentia,Mammal,NA,NA,NA,NA,insectivore,Most probably a Tupaia,156
+Scincidae_spp,Reptile,NA,NA,NA,NA,NA,NA,NA
+Sciuridae_spp,Mammal,Sciuridae,NA,NA,NA,herbivore,NA,484
+Sciurus_aestuans,Mammal,Sciuridae,Sciurus,aestuans,LC,herbivore,If from SE Brazil. than it is the Guerlinguetus braziliensis (commom taxonomic problem),177
+Sciurus_griseus,Mammal,Sciuridae,Sciurus,griseus,LC,herbivore,mostly herbivore but eat some insects,704
+Scorpion,Invertebrate,NA,NA,NA,NA,NA,NA,NA
+Semnopithecus_entellus,Mammal,Cercopithecidae,Semnopithecus,entellus,LC,herbivore,NA,12600
+Semnopithecus_hypoleucos,Mammal,Cercopithecidae,Semnopithecus,hypoleucos,VU,herbivore,NA,12600
+Setornis_criniger,Bird,NA,NA,NA,NA,NA,NA,NA
+Small_mammal,Mammal,NA,NA,NA,NA,NA,NA,NA
+Snake,Reptile,NA,NA,NA,NA,NA,NA,NA
+Soricidae_spp,Mammal,Soricidae,NA,NA,NA,carnivore,NA,12
+Speothos_venaticus,Mammal,Canidae,Speothos,venaticus,NT,carnivore,NA,6320
+Sphiggurus_insidiosus,Mammal,Erethizontidae,Sphiggurus,insidiosus,LC,herbivore,NA,999
+Sphiggurus_villosus,Mammal,Erethizontidae,Sphiggurus,villosus,LC,herbivore,NA,1750
+Spilogale_gracilis,Mammal,Mephitidae,Spilogale,gracilis,LC,omnivore,NA,480
+Spilopelia_chinensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Spilornis_cheela,Bird,NA,NA,NA,NA,NA,NA,NA
+Spilotes_pullatus,Reptile,NA,Spilotes,pullatus,NA,NA,NA,NA
+Spizaetus_cirrhatus,Bird,NA,NA,NA,NA,NA,NA,NA
+Stachyris_erythroptera,Bird,NA,NA,NA,NA,NA,NA,NA
+Strigidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Strigiformes,Bird,NA,NA,NA,NA,NA,NA,NA
+Strix_leptogrammica,Bird,NA,NA,NA,NA,NA,NA,NA
+Suncus_murinus,Mammal,Soricidae,Suncus,murinus,LC,carnivore,NA,43.2
+Sundamys_muelleri,Mammal,Muridae,Sundamys,muelleri,LC,omnivore,NA,356
+Sundasciurus_brookei,Mammal,Sciuridae,Sundasciurus,brookei,LC,herbivore,NA,114
+Sundasciurus_hippurus,Mammal,Sciuridae,Sundasciurus,hippurus,NT,herbivore,NA,358
+Sundasciurus_lowii,Mammal,Sciuridae,Sundasciurus,lowii,LC,herbivore,NA,85
+Sundasciurus_sp.,Mammal,Sciuridae,Sundasciurus,NA,NA,herbivore,NA,171
+Sundasciurus_tenuis,Mammal,Sciuridae,Sundasciurus,tenuis,LC,herbivore,eats bark fruits ans insects,74.9
+Sus_barbatus,Mammal,Suidae,Sus,barbatus,VU,omnivore,NA,135000
+Sus_cebifrons,Mammal,Suidae,Sus,cebifrons,CR,omnivore,NA,188000
+Sus_scrofa,Mammal,Suidae,Sus,scrofa,VU,omnivore,NA,84500
+Domestic_Sus_scrofa,Domestic_mammal,Suidae,Sus,scrofa,VU,omnivore,NA,84500
+Sus_sp.,Mammal,Suidae,Sus,NA,NA,omnivore,NA,106494
+Sylvilagus_audubonii,Mammal,Leporidae,Sylvilagus,audubonii,LC,herbivore,NA,883
+Sylvilagus_bachmani,Mammal,Leporidae,Sylvilagus,bachmani,LC,herbivore,NA,717
+Sylvilagus_brasiliensis,Mammal,Leporidae,Sylvilagus,brasiliensis,LC,herbivore,NA,989
+Sylvilagus_sp.,Mammal,Leporidae,Syvilagus,NA,NA,herbivore,NA,1397
+Symphalangus_syndactylus,Mammal,Hylobatidae,Symphalangus,syndactylus,EN,herbivore,NA,12000
+Synallaxis_frontalis,Bird,NA,Synallaxis,frontalis,NA,NA,NA,NA
+Synallaxis_sp.,Bird,NA,Synallaxis,NA,NA,NA,NA,NA
+Synoicus_chinensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Synoicus_ypsilophorus,Bird,NA,NA,NA,NA,NA,NA,NA
+Tachyglossus_aculeatus,Mammal,Tachyglossidae,Tachyglossus,aculeatus,LC,insectivore,NA,4500
+Tachyphonus_sp.,Bird,NA,Tachyphonus,NA,NA,NA,NA,NA
+Taeniopygia_guttata,Bird,NA,NA,NA,NA,NA,NA,NA
+tailless_bandicoot?,Mammal,NA,NA,NA,NA,NA,what is this?,NA
+Talegalla_jobiensis,Bird,NA,NA,NA,NA,NA,NA,NA
+Tamandua_tetradactyla,Mammal,Myrmecophagidae,Tamandua,tetradactyla,LC,insectivore,NA,4650
+Tamias_sp.,Mammal,Sciuridae,Tamias,NA,NA,herbivore,"""Tamias"" here may refer to the Genus or be a generic term for ""chipmunk"". Not sure.",68
+Tamiops_mcclellandii,Mammal,Sciuridae,Tamiops,mcclellandii,LC,herbivore,NA,46
+Tamiops_sp.,Mammal,Sciuridae,Tamiops,NA,NA,herbivore,NA,56
+Tapirus_indicus,Mammal,Tapiridae,Tapirus,indicus,EN,herbivore,NA,308000
+Tapirus_terrestris,Mammal,Tapiridae,Tapirus,terrestris,VU,herbivore,NA,166000
+Tarsiidae_spp,Mammal,Tarsiidae,NA,NA,NA,carnivore,insects and small certebrates,127
+Taxidea_taxus,Mammal,Mustelidae,Taxidea,taxus,LC,omnivore,Mostly meat. but also some amount of berries and seeds,7840
+Tayassu_pecari,Mammal,Tayassuidae,Tayassu,pecari,VU,omnivore,may consime invertebrates. frogs and reptiles,31400
+Terpsiphone_affinis,Bird,NA,NA,NA,NA,NA,NA,NA
+Testudinoidea,Reptile,NA,NA,NA,NA,NA,NA,NA
+Tetracerus_quadricornis,Mammal,Bovidae,Tetracerus,quadricornis,VU,herbivore,NA,19100
+Thamnophilus_caerulescens,Bird,NA,Thamnophilus,caerulescens,NA,NA,NA,NA
+Thamnophilus_doliatus,Bird,NA,Thamnophilus,doliatus,NA,NA,NA,NA
+Thylogale_billardierii,Mammal,Macropodidae,Thylogale,billardierii,LC,herbivore,NA,5840
+Timalia_pileata,Bird,NA,NA,NA,NA,NA,NA,NA
+Timaliidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Trachypithecus_cristatus,Mammal,Cercopithecidae,Trachypithecus,cristatus,VU,herbivore,"Originaly reported as ""Presbytis_cristata""",7130
+Trachypithecus_obscurus,Mammal,Cercopithecidae,Trachypithecus,obscurus,NT,herbivore,NA,7120
+Trachypithecus_phayrei,Mammal,Cercopithecidae,Trachypithecus,phayrei,EN,herbivore,NA,7700
+Trachypithecus_sp.,Mammal,Cercopithecidae,Trachypithecus,NA,NA,herbivore,NA,8651
+Tragulidae_spp,Mammal,Tragulidae,NA,NA,NA,herbivore,NA,5247
+Tragulus_javanicus,Mammal,Tragulidae,Tragulus,javanicus,DD,herbivore,NA,1870
+Tragulus_kanchil,Mammal,Tragulidae,Tragulus,kanchil,LC,herbivore,NA,2250
+Tragulus_napu,Mammal,Tragulidae,Tragulus,napu,LC,herbivore,NA,5230
+Tragulus_sp.,Mammal,Tragulidae,Tragulus,NA,NA,herbivore,NA,3550
+Treron_vernans,Bird,NA,NA,NA,NA,NA,NA,NA
+Trichastoma_rostratum,Bird,NA,NA,NA,NA,NA,NA,NA
+Trichosurus_vulpecula,Mammal,Phalangeridae,Trichosurus,vulpecula,LC,omnivore,NA,2700
+Trichys_fasciculata,Mammal,Hystricidae,Trichys,fasciculata,NA,herbivore,NA,1750
+Trinomys_dimidiatus,Mammal,Echimyidae,Trinomys,dimidiatus,NA,NA,NA,134.5
+Tropicoperdix_charltonii,Bird,NA,NA,NA,NA,NA,NA,NA
+Tupaia_belangeri,Mammal,Tupaiidae,Tupaia,belangeri,LC,omnivore,eat a lot of invertebrates,200
+Tupaia_dorsalis,Mammal,Tupaiidae,Tupaia,dorsalis,DD,omnivore,eat a lot of invertebrates,168
+Tupaia_glis,Mammal,Tupaiidae,Tupaia,glis,LC,omnivore,eat a lot of invertebrates,132
+Tupaia_gracilis,Mammal,Tupaiidae,Tupaia,gracilis,LC,omnivore,eat a lot of invertebrates,112
+Tupaia_longipes,Mammal,Tupaiidae,Tupaia,longipes,LC,omnivore,eat a lot of invertebrates,168
+Tupaia_minor,Mammal,Tupaiidae,Tupaia,minor,LC,omnivore,eat a lot of invertebrates,70
+Tupaia_picta,Mammal,Tupaiidae,Tupaia,picta,LC,omnivore,eat a lot of invertebrates,168
+Tupaia_sp.,Mammal,Tupaiidae,Tupaia,NA,NA,omnivore,eat a lot of invertebrates,156
+Tupaia_tana,Mammal,Tupaiidae,Tupaia,tana,LC,omnivore,eat a lot of invertebrates,182
+Tupaiidae_spp,Mammal,Tupaiidae,NA,NA,NA,omnivore,eat a lot of invertebrates,146
+Tupinambis_sp.,Reptile,NA,Tupinambis,NA,NA,NA,NA,NA
+Turdus_amaurochalinus,Bird,NA,Turdus,amaurochalinus,NA,NA,NA,NA
+Turdus_leucomelas,Bird,NA,Turdus,leucomelas,NA,NA,NA,NA
+Turdus_obscurus,Bird,NA,NA,NA,NA,NA,NA,NA
+Turdus_rufiventris,Bird,NA,Turdus,rufiventris,NA,NA,NA,NA
+Turdus_sp.,Bird,NA,Turdus,NA,NA,NA,NA,NA
+Turnix_velox,Bird,NA,NA,NA,NA,NA,NA,NA
+Urocyon_cinereoargenteus,Mammal,Canidae,Urocyon,cinereoargenteus,LC,omnivore,Mostly meat. but also some amount of berries,3830
+Ursidae_spp,Mammal,Ursidae,NA,NA,NA,omnivore,NA,131552
+Ursus_americanus,Mammal,Ursidae,Ursus,americanus,LC,omnivore,weight based on data from California,111000
+Ursus_thibetanus,Mammal,Ursidae,Ursus,thibetanus,VU,omnivore,NA,99900
+Utility_truck,Vehicle,NA,NA,NA,NA,NA,NA,NA
+Varanus_nebulosus,Reptile,NA,NA,NA,NA,NA,NA,NA
+Varanus_salvator,Reptile,NA,Varanus,NA,NA,NA,NA,NA
+Varanus_sp.,Reptile,NA,Varanus,NA,NA,NA,NA,NA
+Vehicle,Vehicle,NA,NA,NA,NA,NA,NA,NA
+Viverra_megaspila,Mammal,Viverridae,Viverra,megaspila,EN,carnivore,diet speculated based on the genus,9060
+Viverra_tangalunga,Mammal,Viverridae,Viverra,tangalunga,LC,carnivore,NA,7350
+Viverra_zibetha,Mammal,Viverridae,Viverra,zibetha,LC,carnivore,NA,9150
+Viverricula_indica,Mammal,Viverridae,Viverricula,indica,LC,carnivore,eats fruits in a smaller amount,2980
+Viverricula_sp.,Mammal,Viverridae,Viverricula,NA,NA,carnivore,eats fruits in a smaller amount,2980
+Viverridae_or_Prionodontidae,Mammal,NA,NA,NA,NA,carnivore,"From ""Unknown_Civet_Genet_Linsang""",4031
+Viverridae_spp,Mammal,Viverridae,NA,NA,NA,omnivore,NA,4031
+Vombatus_ursinus,Mammal,Vombatidae,Vombatus,ursinus,LC,herbivore,NA,26000
+Vulpes_macrotis,Mammal,Canidae,Vulpes,macrotis,LC,omnivore,NA,2200
+Vulpes_vulpes,Mammal,Canidae,Vulpes,vulpes,LC,omnivore,NA,4840
+Xerus_princeps?_prob.wrong,Mammal,NA,NA,NA,NA,NA,NA,NA
+Zonotrichia_capensis,Bird,NA,Zonotrichia,capensis,NA,NA,NA,NA
+Zoothera_citrina,Bird,NA,NA,NA,NA,NA,NA,NA
+Zoothera_sibirica,Bird,NA,NA,NA,NA,NA,NA,NA
+Ailurus_fulgens,Mammal,Ailuridae,Ailurus,fulgens,EN,herbivore,NA,5170
+Apodemus_peninsulae,Mammal,Muridae,Apodemus,peninsulae,LC,herbivore,NA,NA
+Apodemus_sp.,Mammal,Muridae,Apodemus,NA,,herbivore,NA,NA
+Arborophila_brunneopectus,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_javanica,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_merlini,Bird,NA,NA,NA,NA,NA,NA,NA
+Arborophila_rufogularis,Bird,NA,NA,NA,NA,NA,NA,NA
+Axis_kuhlii,Mammal,Cervidae,Axis,kuhlii,CR,herbivore,NA,55000
+Bambusicola_fytchii,Bird,NA,NA,NA,NA,NA,NA,NA
+Budorcas_taxicolor,Mammal,Bovidae,Budorcas,taxicolor,VU,herbivore,NA,294515.33
+Capricornis_rubidus,Mammal,Bovidae,Capricornis,rubidus,VU,herbivore,NA,NA
+Chrotogale_owstoni,Mammal,Viverridae,Chrotogale,owstoni,EN,insectivore?,captive individual diet was based on earthworms. teeth sugest diet  based on invertebrates,3268
+Dremomys_lokriah,Mammal,Sciuridae,Dremomys,lokriah,LC,herbivore,NA,227
+Dremomys_pernyi,Mammal,Sciuridae,Dremomys,pernyi,LC,herbivore,NA,199
+Elaphodus_cephalophus,Mammal,Cervidae,Elaphodus,cephalophus,NT,herbivore,NA,23088
+Eupetaurus_cinereus,Mammal,Sciuridae,Eupetaurus,cinereus,EN,herbivore,NA,NA
+Geokichla_citrina,Bird,NA,NA,NA,NA,NA,NA,NA
+Hyaena_hyaena,Mammal,Hyaenidae,Hyaena,hyaena,NT,carnivore,NA,35070
+Hydrornis_elliotii,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_soror,Bird,NA,NA,NA,NA,NA,NA,NA
+Hystrix_javanica,Mammal,Hystricidae,Hystrix,javanica,LC,herbivore,NA,NA
+Lepus_comus,Mammal,Leporidae,Lepus,comus,LC,herbivore,NA,2016
+Lepus_oiostolus,Mammal,Leporidae,Lepus,oiostolus,LC,herbivore,NA,2469
+Macaca_assamensis,Mammal,Cercopithecidae,Macaca,assamensis,NT,omnivore,NA,8547
+Macaca_leucogenys,Mammal,Cercopithecidae,Macaca,leucogenys,NA,omnivore,diet inferred based on the genus,NA
+Manis_pentadactyla,Mammal,Manidae,Manis,pentadactyla,CR,insectivore,NA,4675
+Manis_sp.,Mammal,Manidae,Manis,NA,EN,insectivore,the less threatened species of the genus is clasified by IUCN as EN all remaining are CR,NA
+Martes_foina,Mammal,Mustelidae,Martes,foina,LC,carnivore,NA,1675
+Mellivora_capensis,Mammal,Mustelidae,Mellivora,capensis,LC,carnivores,NA,9000
+Melogale_orientalis,Mammal,Mustelidae,Melogale,orientalis,LC,omnivore,NA,NA
+Mesechinus_wangi,Mammal,Erinaceidae,Mesechinus,wangi,NA,NA,Seems to be a recently discribed species,NA
+Moschus_berezovskii,Mammal,Moschidae,Moschus,berezovskii,EN,herbivore,NA,12477
+Moschus_chrysogaster,Mammal,Moschidae,Moschus,chrysogaster,EN,herbivore,NA,13698
+Muntiacus_gongshanensis,Mammal,Cervidae,Muntiacus,gongshanensis,DD,herbivore,NA,18590
+Muntiacus_feae,Mammal,Cervidae,Muntiacus,feae,DD,herbivore,NA,22000
+Muntiacus_rooseveltorum,Mammal,Cervidae,Muntiacus,rooseveltorum,DD,herbivore,NA,10763
+Muntiacus_vuquangensis,Mammal,Cervidae,Muntiacus,vuquangensis,CR,herbivore,NA,36691
+Muscicapidae_spp,Bird,NA,NA,NA,NA,NA,NA,NA
+Mustela_kathiah,Mammal,Mustelidae,Mustela,kathiah,LC,carnivore,NA,263.74
+Mustela_sibirica,Mammal,Mustelidae,Mustela,sibirica,LC,carnivore,NA,530.85
+Mustela_strigidorsa,Mammal,Mustelidae,Mustela,trigidorsa,LC,carnivore,NA,1500
+Mustela_sp.,Mammal,Mustelidae,Mustela,NA,NA,carnivore,NA,NA
+Naemorhedus_goral,Mammal,Bovidae,Naemorhedus,goral,NT,herbivore,NA,28796
+Naemorhedus_griseus,Mammal,Bovidae,Naemorhedus,griseus,NA,herbivore,This may be an synonyms name.,NA
+Nesolagus_timminsi,Mammal,Leporidae,Nesolagus,timminsi,EN,herbivore,NA,NA
+Niviventer_confucianus,Mammal,Muridae,Niviventer,confucianus,LC,NA,NA,
+Nomascus_sp.,Mammal,Hylobatidae,Nomascus,NA,EN,frugivore,the less threatened species of the genus is clasified by IUCN as EN all remaining are CR,NA
+Nycticebus_javanicus,Mammal,Lorisidae,Nycticebus,javanicus,CR,omnivore?,diet inferred based on the genus,925
+Nycticebus_pygmaeus,Mammal,Lorisidae,Nycticebus,pygmaeus,EN,omnivore,NA,342
+Ochotona_forresti,Mammal,Ochotonidae,Ochotona,forresti,LC,herbivore,NA,NA
+Ochotona_gaoligongensis,Mammal,Ochotonidae,Ochotona,gaoligongensis,NA,herbivore,NA,NA
+Otocolobus_manul,Mammal,Felidae,Otocolobus,manul,LC,carnivore,NA,
+Ochotona_sp.,Mammal,Ochotonidae,Ochotona,NA,NA,herbivore,NA,NA
+Pholidota,Mammal,NA,NA,NA,NA,insectivore,NA,NA
+Panthera_uncia,Mammal,Felidae,Panthera,uncia,VU,carnivore,NA,32500
+Petaurista_petaurista,Mammal,Sciuridae,Petaurista,petaurista,LC,herbivore,NA,1534
+Petaurista_yunanensis,Mammal,Sciuridae,Petaurista,yunanensis,NA,herbivore,This may be an synonyms name.,NA
+Presbytis_comata,Mammal,Cercopithecidae,Presbytis,comata,EN,herbivore,NA,6550
+Pseudois_nayaur,Mammal,Bovidae,Pseudois,nayaur,LC,herbivore,NA,52335
+Pygathrix_nemaeus,Mammal,Cercopithecidae,Pygathrix,nemaeus,CR,herbivore,NA,9411
+Rallina_eurizonoides,Bird,NA,NA,NA,NA,NA,NA,NA
+Rattus_nitidus,Mammal,Muridae,Rattus,nitidus,LC,omnivore,NA,100
+Rattus_pyctoris,Mammal,Muridae,Rattus,pyctoris,LC,omnivore,NA,NA
+Rheinardia_ocellata,Bird,NA,NA,NA,NA,NA,NA,NA
+Rhinoceros_unicornis,Mammal,Rhinocerotidae,Rhinoceros,unicornis,LC,herbivore,NA,1843656
+Rhizomys_sinensis,Mammal,Spalacidae,Rhizomys,sinensis,LC,herbivore,NA,NA
+Rhizomys_sp.,Mammal,Spalacidae,Rhizomys,NA,NA,herbivore,NA,NA
+Rucervus_eldii,Mammal,Cervidae,Rucervus,eldii,EN,herbivore,NA,95472
+Sciurotamias_davidianus,Mammal,Sciuridae,Sciurotamias,davidianus,LC,herbivore,NA,NA
+Sciurotamias_forresti,Mammal,Sciuridae,Sciurotamias,forresti,LC,herbivore,NA,NA
+Semnopithecus_hector,Mammal,Cercopithecidae,Semnopithecus,hector,NT,herbivore,NA,NA
+Sus_blouchi,Mammal,Suidae,Sus,blouchi,NA,omnivore,NA,NA
+Tamiops_swinhoei,Mammal,Sciuridae,Tamiops,swinhoei,LC,herbivore,NA,NA
+Taphozous_melanopogon,Mammal,Emballonuridae,Taphozous,melanopogon,LC,omnivore?,eats insects and fruits,26
+Trachypithecus_francoisi,Mammal,Cercopithecidae,Trachypithecus,francoisi,EN,herbivore,NA,8140
+Trachypithecus_germaini,Mammal,Cercopithecidae,Trachypithecus,germaini,EN,herbivore,NA,NA
+Trachypithecus_shortridgei,Mammal,Cercopithecidae,Trachypithecus,shortridgei,EN,herbivore,NA,NA
+Tragulus_williamsoni,Mammal,Tragulidae,Tragulus,williamsoni,DD,herbivore,NA,NA
+Tupaia_javanica,Mammal,Tupaiidae,Tupaia,javanica,LC,omnivore,eat a lot of invertebrates,NA
+Tupaia_montana,Mammal,Tupaiidae,Tupaia,montana,LC,omnivore,eat a lot of invertebrates,168
+Ursus_arctos,Mammal,Ursidae,Ursus,arctos,LC,omnivore,NA,196287
+Vulpes_bengalensis,Mammal,Canidae,Vulpes,bengalensis,LC,omnivore,NA,2514
+Vulpes_ferrilata,Mammal,Canidae,Vulpes,ferrilata,LC,omnivore,NA,5544
+Zoothera_dauma,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_cyaneus,Bird,NA,NA,NA,NA,NA,NA,NA
+Hydrornis_oatesi,Bird,NA,NA,NA,NA,NA,NA,NA
+Rhinopithecus_strykeri,Mammal,Cercopithecidae,Rhinopithecus,strykeri,CR,herbivore,NA,NA

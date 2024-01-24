@@ -1,0 +1,604 @@
+---
+title: "Species-level Temporal Shift Analysis"
+author: "Samuel Xin Tham Lee"
+date: "2023-03-13"
+output: html_document
+---
+
+Here, we will begin to analyse the species-level temporal activity of Southeast Asian wildlife. After filtering species that have <20 detections within intact and degraded forests, we are left with 23 species which encompasses 21 species of mammals and two species of birds (29,879 detections).
+
+#Load the relevant packages and dataframe
+
+```{r}
+#Set working directory
+setwd("C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity pre-revision analyses Sam Honours/SEA Activity temporal shift by species Sam Honours")
+
+#and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Shift Analysis Sam Honours/SEA Activity pre-revision analyses Sam Honours/SEA Activity temporal shift by species Sam Honours")
+
+#Load the packages
+library(tidyverse);library(activity);library(overlap);library(lubridate);library(plyr)
+
+#Load the dataframe
+caps <- as.data.frame(read.csv('SEA_Activity_dataset_for_species-level_analyses_20230307.csv'))
+
+#Inspect the dataframe
+head(caps)
+str(caps)
+names(caps)
+dim(caps)
+anyNA(caps)
+```
+
+Here, we will be extensively using for() loops to carry out our analyses. In general, 'Loops' are great at repeating the same functions over and over again for a given dataset.
+
+```{r}
+#Create a species and status vector
+sort(unique(caps$Species))
+sp <- c('Argusianus_argus', 'Atherurus_macrourus', 'Echinosorex_gymnura', 'Helarctos_malayanus', 'Hemigalus_derbyanus', 'Hystrix_brachyura', 'Hystrix_crassispinis', 'Lophura_ignita', 'Macaca_nemestrina', 'Martes_flavigula', 'Muntiacus_muntjak', 'Neofelis_nebulosa', 'Paguma_larvata', 'Panthera_tigris', 'Paradoxurus_hermaphroditus', 'Prionailurus_bengalensis', 'Prionodon_linsang', 'Rusa_unicolor', 'Sus_barbatus', 'Sus_scrofa', 'Tapirus_indicus', 'Tragulus_sp.', 'Trichys_fasciculata')
+status <- c('Degraded', 'Intact')
+
+#Store the dataframes for each species in this list
+sp_caps = list() 
+
+#Test out the loop with specific variables
+i=1
+
+for(i in 1:length(sp)){ #repeat for each species
+  
+  #Specify species and subset caps for it
+  a = sp[i]
+  b = caps[caps$Species == a,]
+  
+  #Save it!
+  sp_caps[[i]] = b
+  names(sp_caps)[i]= a
+  
+}
+
+## keep environment clean
+rm(a,b,i)
+```
+
+#Loop to split species data frames into specific status data frames stored in a nested list 
+
+We will further split each of the species dataframes by the FLII status (i.e., degraded or intact)
+
+```{r}
+## store the split dataframes into this list 
+split_sp = list()
+
+## variables to practice with 
+i=1;l=1
+
+for(i in 1:length(sp_caps)){ # repeat for each species
+  
+  #Subset data for a single species
+  a = sp_caps[[i]] 
+  
+  #store results for each value per status
+  temp = list()
+
+  for(l in 1:length(status)){ # repeat for each status
+    
+    #Select a status
+    b = status[l]
+    
+    # Subset the dataframe for each status
+    c = a[a$FLII_status == b,]
+    
+      
+      if(nrow(c)>0){ # add a conditional statement to avoid saving data w/ zero detections
+        
+        # save this! 
+        temp[[l]] = c
+        names(temp)[l] = b
+        
+      }else{
+        
+        # Make it NA if were missing data! 
+        temp[[l]] = NA
+        names(temp)[l] = b
+        
+      } # end conditional statement
+
+    
+  } # end loop per status
+  
+  # Save the species name 
+  split_sp[[i]] = temp
+  names(split_sp)[i] = unique(a$Species)
+  
+  
+} # end loop per species
+
+#keep environment clean
+rm(temp,i,l,a,b,c)
+```
+
+#Loop to generate Actmod objects for each status per species
+
+Here, we will be using the fitact() function to create Activity Model Class (Actmod) objects or simple terms, circular kernel density estimates to observe the activity pattern of each species. We will be using 10,000 bootstrap samples to meet current literature criteria, however, for testing purposes, it will be wise to use a lower number (e.g., 10 reps) as it can take awhile to finish.
+
+```{r}
+## store actmod objects in this list 
+actmod.list = list()
+
+## variables to practice the loop with 
+i=1;l=1
+
+for(i in 1:length(split_sp)){ #repeat for each species 
+  
+  #subset for a specific species and save the species name
+  a = split_sp[[i]]
+  s = names(split_sp)[i] 
+  
+  #save results from next loop in this temporary list
+  temp = list()
+  
+  for(l in 1:length(a)){ #repeat for each status
+    
+    #subset for a specific status
+    b = a[[l]]
+    v = names(a)[l] #save that status name 
+    
+    
+      if(nrow(b) <= 100){
+        
+        act = fitact(b$time.rad, sample = "model", adj = 1, reps = 10000) 
+        
+      }else{
+        
+        act = fitact(b$time.rad, sample = "data", adj = 1, reps = 10000) 
+        
+      } #end conditional 
+      
+      
+      #Save it
+      temp[[l]] = act
+      names(temp)[l] = v
+      
+    
+  } # end loop per status 
+  
+  ## THE FINAL SAVE
+  actmod.list[[i]] = temp
+  names(actmod.list)[i] = s
+  
+} #end loop per species
+
+#keep environment clean
+rm(i,l,a,b,s,v,temp,act)
+
+#Save actmods in teh form of a RDS file
+saveRDS(actmod.list, 'SEA_Activity_species-level_actmods_20230313.RDS')
+```
+
+#Determining Temporal Shifts
+
+###Using CompareCkern() fucntion to calculate p-value
+
+In the 'activity' package in r, there are various statistical significance test that we can use to calculate p-values. However, for the purposes of our research question, the more approprite test to use is the compareCkern() test as it calculates the significant difference between two circular kernel density curves. Other statistcal significance test included in the package are compareAct() ('Wald test') and the compareTime () tests. You can read more about it [here](https://www.rdocumentation.org/packages/activity/versions/1.3.2)
+
+```{r}
+#Create an empty list to save results
+p_value.list <- list()
+
+i = 1
+
+for (i in 1:length(actmod.list)) { #repeat for each species
+  
+  a = actmod.list[[i]] #Select a single species
+  b = names(actmod.list)[i] #Save the name of the species
+  
+  #Compare activity patterns 
+  c = as.data.frame(compareCkern(a[[1]], a[[2]]))
+  
+  #Add species and outputs column
+  c$species = b
+  c$outputs = rownames(c)
+  
+  #Save it 
+  p_value.list[[i]] = c
+  names(p_value.list)[i] = b
+  
+  
+}
+
+#Keep environment clean!
+rm(a,b,c,i)
+
+#Extract outputs and covert it into a dataframe
+df = do.call(rbind, p_value.list)
+rownames(df)= NULL
+#rm(res)
+
+#Filter out the p-values and rename the column
+df <- df %>% 
+  filter(outputs == "pNull") %>% 
+  select(-outputs)
+
+colnames(df) <- c('pNull', 'species')
+
+#Keep environment clean!
+rm(p_value.list, split_sp, sp_caps)
+```
+
+###Using the overlapEST() function to calculate overlap estimate 
+
+Here, we will be calculating the overlap estimate using the overlapEST() fucntion from the 'overlap' package. Overlap is basically the overlapping area under the two activity curves where the overlap estimate ranges from 0 to 1. We will also be using bootstrapping to calculate the 95% CI of each overlap estimate and thus can take some time to finish. 
+
+```{r}
+#Create an empty list to store results
+overlap.list = list()
+
+i=1;l=1
+
+for (i in 1:length(actmod.list)) { #repeat for each species
+  
+  a = actmod.list[[i]]
+  b = names(actmod.list)[i]
+  
+  c = min(length(a[[1]]@data), length(a[[2]]@data))
+  
+  if(c <= 75){
+    
+    overlap.coef = overlapEst(a[[1]]@data, a[[2]]@data, adjust = 0.8, type = "Dhat1")
+    
+  }else{
+    
+    overlap.coef = overlapEst(a[[1]]@data, a[[2]]@data, adjust = 1, type = "Dhat4")
+    
+  }
+  
+  
+  if(c <= 75){ #calculate overlap estimate
+    
+    overlap.boot = bootstrap(a[[1]]@data, a[[2]]@data, nb = 10000, adjust = 0.8, type = "Dhat1")
+    
+    
+  }else{
+    
+    overlap.boot = bootstrap(a[[1]]@data, a[[2]]@data, nb = 10000, adjust = 1, type = "Dhat4")
+    
+    
+  }
+  
+  overlap.CI = bootCI(overlap.coef, overlap.boot, conf = 0.95) #calculate 95% CI of overlap estimate
+  
+  d = as.data.frame(overlap.CI)
+  
+  d = d["norm0",]
+  
+  e = as.data.frame(overlap.coef)
+  
+  f = cbind(e,d)
+  
+  f$species = b
+  
+  overlap.list[[i]] = f
+  names(overlap.list)[i] = b
+  
+}
+
+
+#Keep environment clean!
+rm(a,b,c,d,e,f,i,l,overlap.boot,overlap.CI,overlap.coef)
+
+#Merge it with df
+a = do.call(rbind, overlap.list)
+df <- merge(df, a, by = 'species')
+rm(a, overlap.list)
+
+```
+
+###Extract peak activity within intact and degraded forests
+
+The peak activity refers to the time associated to maximum temporal activity density or in more simple terms, the time when a species/guild/community is most active. We first define a peak activity to be ‘nocturnal’, ‘diurnal’ and ‘crepuscular’ when the peak activity occurred within the night (1931 – 0429 hours; 9 hours total), day (0731 – 1629 hrs; 9 hours total) and dawn and/or dusk (0430 – 0730 hrs and/or 1630 – 1930 hrs; 6 hours total) respectively. A change of peak activity has occurred when there is a shift between 'diurnal', 'nocturnal' and 'crepuscular' hours. For instance, when a species has a peak activity at 0500 hours in intact forests while having a peak activity at 0800 hours in degraded forests, this shows that the species has shifted from crepuscular to diurnal hours, which is referred to a diurnal change in peak activities. 
+
+Firstly, we will need to 'unlist' actmod.list and create to a dataframe before extracting.
+
+```{r}
+#Unlist actmod.list
+act <- unlist(actmod.list)
+
+#Create a vector for our column names
+colnamestoextract = c("species", "peak_activity_radians")
+
+#Create a dataframe to fill
+empty = as.data.frame(matrix(NA,nrow = length(act),ncol = 2))
+
+#Apply the column names
+colnames(empty) = colnamestoextract
+
+```
+
+Here, we will use a loop to extract the peak activities in radians from each of the actmods. This is usually called a S4 model extraction.
+
+```{r}
+i=1
+
+for(i in 1:length(act)){
+  
+  a = act[[i]] #Subset a term from the list called act
+  
+  b = names(act)[i] #Save the names of the term
+  
+  empty$species[i] = b #Save the names of the term
+  
+  c = a@pdf #Extract the probability density function values
+  
+  d = as.data.frame(c) #Convert it into a dataframe
+  
+  e = filter(d, y == max(y)) # Remove other rows and now only contains maximum density values 
+  
+  empty$peak_activity_radians[i] = e$x #X will be the peak activity where most of our species detections (density) are found
+  
+}
+
+#Keep environment clean
+rm(a,b,c,d,e,i,colnamestoextract)
+
+```
+
+Now, we will convert radian times into our normal time format in hours: minutes: seconds and separate them by FLII status.
+
+```{r}
+#Convert peak_activity in radians to seconds
+empty <- empty %>% mutate(peak_activity_seconds = (peak_activity_radians*86400)/(2*pi))
+
+#Convert seconds into time format
+str(empty)
+empty$peak_activity_seconds <- as.integer(empty$peak_activity_seconds)
+empty <- empty %>% mutate(peak_activity = seconds_to_period(peak_activity_seconds))
+
+#Select columns that we need
+empty <- select(empty, species, peak_activity)
+
+#Create a dataframe with only degraded peak activities
+degraded_peak <- empty[!grepl(".Intact", empty$species),]
+colnames(degraded_peak) <- c("species", "peak_activity_degraded")
+
+#Create a dataframe with only pristine peak actvities
+intact_peak <- empty[!grepl(".Degraded", empty$species),]
+colnames(intact_peak) <- c("species", "peak_activity_intact")
+
+#Combine both of them!
+intact_peak <- intact_peak %>% select(-species)
+peak_activity <- cbind(degraded_peak, intact_peak)
+
+#Remove ".Degraded" to combine with p-values and overlaps later
+peak_activity = peak_activity %>% 
+  mutate(species = str_remove_all(species, ".Degraded"))
+
+#keep environment clean
+rm(act, degraded_peak, empty, intact_peak)
+
+#Merge it with df
+df <- merge(df, peak_activity, by = 'species')
+
+#Save the overall results!
+write.csv(df, 'SEA_Activity_species-level_results_20230313.csv', row.names = F)
+
+#Keep environment clean
+rm(peak_activity, caps)
+
+```
+
+#Visualisation of Activity Patterns
+
+Here, we will begin the process of visualizing activity curves using ggplot2(). But first, we nned to prepare the data before hand
+
+###Data preparation for visualisation
+
+We need to extract the probability distribution function (pdf) from each actmod to plot the data. As usual, we will be using loops to do this.
+
+```{r}
+#Create a empty list to store prepared data
+pdf_cov = list()
+
+i=1;k=1 #Change here to select different variables
+
+for (i in 1:length(actmod.list)) {#repeat for each species
+  
+  #Select a single species and save the name
+  a = actmod.list[[i]]
+  b = names(actmod.list)[i]
+  
+  #Create an empty dataframe store multiple activity distributions here by matching the format of the pdf 
+  c = data.frame(a[[1]]@pdf)
+  c = c[0,]
+  
+  for (k in 1:length(a)) { #repeat for each status
+    
+    #Select a single status and save the name
+    d = a[[k]]
+    e = names(a)[k]
+    
+    #Extract the probability density function 
+    f = data.frame(d@pdf)
+    f$species = b
+    f$status = e
+    
+    #save this!
+    c = rbind(c, f)
+    
+  }
+  
+  #save it!
+  pdf_cov[[i]] = c
+  names(pdf_cov)[i] = b
+}
+
+#Keep environment clean!
+rm(a,b,c,d,e,f,i,k)
+
+```
+
+###Visualisation 
+
+Feel free to adjust the themes, colours and fonts in ggplot2().
+
+```{r}
+#Save the plots here
+cov_plot = list()
+
+i=1 #Change here to select a different variable
+
+for (i in 1:length(pdf_cov)) { #repeat for each species
+  
+  #Select a single species
+  a = pdf_cov[[i]]
+  b = names(pdf_cov)[i]
+  
+  #Visualise activity using ggplot
+  plot =
+    ggplot(a, aes(x=x, y=y, fill = status))+
+    geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.6)+
+    scale_x_continuous(breaks = c(0, 3.14, 6.3), 
+                       labels = c("Midnight", "Noon", "Midnight"))+
+    coord_cartesian(ylim = c(0, 1.0))+ 
+    annotate("rect", xmin = 0, xmax = 1.17, ymin = 0, ymax= c(0,0.8), color = "#333333", alpha = .4)+
+    annotate("rect", xmin = 1.18, xmax = 1.96, ymin = 0, ymax= c(0,0.8), color = "grey", alpha = .1)+
+    annotate("rect", xmin = 4.32, xmax = 5.1, ymin = 0, ymax= c(0,0.8), color = "grey", alpha = .1)+
+    annotate("rect", xmin = 5.11, xmax = 6.3, ymin = 0, ymax= c(0,0.8), color = "#333333", alpha = .4)+
+    theme_test()+
+    scale_fill_manual(name = a$status, values = c("#FC6600", "#4169e1"))+
+    theme(axis.title = element_blank(), axis.text = element_text(size = 16),
+          legend.position  = 'none', panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))
+  
+  #Save the plots
+  cov_plot[[i]] = plot
+  names(cov_plot)[i] = b
+  
+}
+
+#Keep environment clean
+rm(a,b,i,plot)
+
+```
+
+```{r}
+#Save all the plots!
+
+i=1
+
+for(i in 1:length(cov_plot)){ #repeat for each species
+  
+  # select a single plot from a species
+  a = cov_plot[[i]]
+  b = names(cov_plot)[i] #save species name
+  
+  path = paste0(b, "_20230310.PDF", sep = "")
+  
+  ggsave(path, a, height = 8, width = 14, units = "in")
+  
+  
+} 
+
+#Keep environment clean
+rm(a,b,path,i)
+
+```
+
+
+###Visualisation of Species Activity using Lollipop Diagrams
+
+Due to the sheer amount of species considered, we will used lollipop diagrams to summarise our species-level results.
+
+First, we will differentiate between the 'weak' and 'strong' shifts. 1 - overlap or magnitude of difference essentially acts our effect size which tells us how much a species has change (%) in activity between intact and degraded forests.
+
+```{r}
+#Create magnitude of difference column (1 - overlap)
+df <- df %>% mutate(magnitude_of_difference = 1 - overlap.coef)
+
+#Differentiate between a weak and a strong shift (weak = MOD <= 0.25; strong = MOD > 0.25)
+df$mod_results = "weak"
+df$mod_results[df$magnitude_of_difference > 0.25] = "strong"
+
+```
+
+Next, we will group species based on changes in peak activity between forests. For instance, if a species have peak activity at diurnal hours in intact forests and now has a peak activity at crepuscular hours within degraded forests, then a crepuscular shift in peak activity has occurred. Similar methods are also applied to determine diurnal and nocturnal shifts in peak activity.
+
+```{r}
+#Add peak_activity_results column to determine whether a change in peak activity occurred
+df$peak_activity_results = "NA"
+df$peak_activity_results[df$species %in% c("Macaca_nemestrina", "Lophura_ignita")] = "diurnal_remain"  
+
+df$peak_activity_results[df$species %in% c("Atherurus_macrourus", "Hystrix_brachyura",                  "Echinosorex_gymnura", "Hystrix_crassispinis", "Trichys_fasciculata", "Hemigalus_derbyanus")] = "nocturnal_remain"
+
+df$peak_activity_results[df$species %in% c("Tapirus_indicus", "Prionodon_linsang", "Prionailurus_bengalensis")] = "nocturnal_change"  
+
+df$peak_activity_results[df$species %in% c("Tragulus_sp.", "Rusa_unicolor", "Muntiacus_muntjak", "Helarctos_malayanus", "Panthera_tigris")] = "crepuscular_remain"
+
+df$peak_activity_results[df$species %in% c("Paguma_larvata", "Sus_scrofa", "Martes_flavigula", "Sus_barbatus", "Neofelis_nebulosa", "Paradoxurus_hermaphroditus","Argusianus_argus")] = "crepuscular_change"
+
+```
+
+Here, we will incorporate a new column titled 'significance' to differentiate significant vs non-significant results.
+
+```{r}
+#Create a "significance" column
+df$significance = "NA"
+df$significance[df$pNull < 0.05] = "significant"
+df$significance[df$significance == "NA"] = "non-significant"
+
+```
+
+Now, we will order species based on their shift in peak activity, then followed by their MOD and p-values.
+
+```{r}
+#First, let's create five dataframes corresponding to the five different peak activity results.
+crep_change <- df[df$peak_activity_results == 'crepuscular_change',]
+crep_remain <- df[df$peak_activity_results == 'crepuscular_remain',]
+noc_change <- df[df$peak_activity_results == 'nocturnal_change',]
+noc_remain <- df[df$peak_activity_results == 'nocturnal_remain',]
+diur_remain <- df[df$peak_activity_results == 'diurnal_remain',]
+
+#Order each of the dataframes from the smallest to largest MOD
+crep_change <- crep_change[order(crep_change$magnitude_of_difference),]
+crep_remain <- crep_remain[order(crep_remain$magnitude_of_difference),]
+noc_change <- noc_change[order(noc_change$magnitude_of_difference),]
+noc_remain <- noc_remain[order(noc_remain$magnitude_of_difference),]
+diur_remain <- diur_remain[order(diur_remain$magnitude_of_difference),]
+
+#Now let's rbind all of them in this order (Nocturnal > Crepuscular > Diurnal; Remain > Shift) 
+df <- rbind(noc_remain, crep_remain)
+df <- rbind(df, diur_remain)
+df <- rbind(df, noc_change)
+df <- rbind(df, crep_change)
+
+#Keep environment clean
+rm(crep_change,crep_remain,diur_remain,noc_change,noc_remain)
+
+#Here, we will set 'species' as factor values. We do this because it allows us to arrange species in the order that we want them to be in. We based this on the order within the 'species' column of the new dataframe that we just created.
+
+df$species <- factor(df$species, levels = c("Echinosorex_gymnura", "Hystrix_brachyura", "Hemigalus_derbyanus", "Hystrix_crassispinis", "Atherurus_macrourus", "Trichys_fasciculata", "Muntiacus_muntjak", "Helarctos_malayanus", "Rusa_unicolor", "Tragulus_sp.", "Panthera_tigris", "Lophura_ignita", "Macaca_nemestrina", "Tapirus_indicus", "Prionailurus_bengalensis", "Prionodon_linsang", "Sus_scrofa", "Martes_flavigula", "Paguma_larvata", "Paradoxurus_hermaphroditus", "Sus_barbatus", "Argusianus_argus", "Neofelis_nebulosa"))
+
+
+#Visualise the species-level results
+
+plot = ggplot(df, aes(x = species, y = magnitude_of_difference)) +
+  
+  geom_point(shape = 19, size = 5) +
+  
+  geom_segment(aes(x=species, xend=species, y=0, yend = magnitude_of_difference, linetype = significance), size = 1.5) +
+  
+  labs(y = "Magnitude of difference", x = "Species",) +
+  
+  scale_linetype_manual(values = c("significant" = "solid", "non-significant" = "longdash")) +
+  
+  scale_y_continuous(expand = c(0,0)) +
+  
+  coord_cartesian(ylim = c(0.0,0.4)) +
+  
+  theme_classic() +
+  
+  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12))
+
+plot
+
+```
+

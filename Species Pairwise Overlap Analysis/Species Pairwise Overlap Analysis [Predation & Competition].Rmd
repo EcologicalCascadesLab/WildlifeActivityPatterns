@@ -1,0 +1,1197 @@
+---
+title: "Species Overlap Analysis"
+author: "Samuel Xin Tham Lee"
+date: "2023-03-28"
+output: html_document
+---
+
+Here, we will analyse the change in temporal overlap between species-pairs, namely potential predator-prey and competitor-competitor species pairs between intact and degraded forests. We hypothesized that due to the contraction of species activity to certain hours of the day (i.e., nighttime), therefore species will exhibit higher overlap with one another in degraded forests compared to intact forests.
+
+#Load the necessary packages and dataframes
+
+```{r}
+# Set working directory
+setwd("C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Overlap and Species Interaction Analysis Sam Honours")
+
+# and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/samle/Dropbox/Sam Lee Honours/SEA Activity Data Analysis Sam Honours/SEA Activity Temporal Overlap and Species Interaction Analysis Sam Honours")
+
+#Load libraries
+library(plyr);library(tidyverse);library(activity);library(lubridate);library(overlap);library(data.table);library(plotrix)
+
+#Load in the dataframe 
+caps = as.data.frame(read.csv("SEA_Activity_dataset_for_species-level_analyses_20230307.csv"))
+
+#Inspect the dataframe
+head(caps)
+str(caps)
+names(caps)
+dim(caps)
+anyNA(caps)
+```
+
+Here, we will be extensively using for() loops to carry out our analyses. In general, 'Loops' are great at repeating the same functions over and over again for a given dataset.
+
+```{r}
+#Create a species and status vector
+sort(unique(caps$Species))
+
+sp <- c('Argusianus_argus', 'Atherurus_macrourus', 'Echinosorex_gymnura', 'Helarctos_malayanus', 'Hemigalus_derbyanus', 'Hystrix_brachyura', 'Hystrix_crassispinis', 'Lophura_ignita', 'Macaca_nemestrina', 'Martes_flavigula', 'Muntiacus_muntjak', 'Neofelis_nebulosa', 'Paguma_larvata', 'Panthera_tigris', 'Paradoxurus_hermaphroditus', 'Prionailurus_bengalensis', 'Prionodon_linsang', 'Rusa_unicolor', 'Sus_barbatus', 'Sus_scrofa', 'Tapirus_indicus', 'Tragulus_sp.', 'Trichys_fasciculata')
+
+status <- c('Degraded', 'Intact')
+
+#Store the dataframes for each status in this list
+status_caps = list() 
+
+#Test out the loop with specific variables
+i=1
+
+for(i in 1:length(status)){ #repeat for each status
+  
+  #Specify status and subset caps for it
+  a = status[i]
+  b = caps[caps$FLII_status == a,]
+  
+  #Save it!
+  status_caps[[i]] = b
+  names(status_caps)[i]= a
+  
+}
+
+## keep environment clean
+rm(a,b,i)
+
+```
+
+#Loop to split status data frames into specific species data frames stored in a nested list
+
+We will further split each of the status dataframes by species 
+
+```{r}
+## store the split dataframes into this list 
+split_status = list()
+
+## variables to practice with 
+i=1;l=1
+
+for(i in 1:length(status_caps)){ # repeat for each status
+  
+  #Subset data for a single status
+  a = status_caps[[i]] 
+  
+  #store results for each species per status
+  temp = list()
+
+  for(l in 1:length(sp)){ # repeat for each species
+    
+    #Select a species
+    b = sp[l]
+    
+    # Subset the dataframe for each species
+    c = a[a$Species == b,]
+    
+      
+      if(nrow(c)>0){ # add a conditional statement to avoid saving data w/ zero detections
+        
+        # save this! 
+        temp[[l]] = c
+        names(temp)[l] = b
+        
+      }else{
+        
+        # Make it NA if were missing data! 
+        temp[[l]] = NA
+        names(temp)[l] = b
+        
+      } # end conditional statement
+
+    
+  } # end loop per species
+  
+  # Save the status name 
+  split_status[[i]] = temp
+  names(split_status)[i] = unique(a$FLII_status)
+  
+  
+} # end loop per status
+
+#keep environment clean
+rm(temp,i,l,a,b,c)
+```
+
+ Loop to generate Actmod objects for each species per status
+
+Here, we will be using the fitact() function to create Activity Model Class (Actmod) objects or in simple terms, circular kernel density estimates to observe the activity pattern of each species. We will be using 10,000 bootstrap samples to meet current literature criteria, however, for testing purposes, it will be wise to use a lower number (e.g., 10 reps) as it can take awhile to finish.
+
+```{r}
+## store actmod objects in this list 
+actmod.list = list()
+
+## variables to practice the loop with 
+i=1;l=1
+
+for(i in 1:length(split_status)){ #repeat for each status
+  
+  #subset for a specific status and save the status name
+  a = split_status[[i]]
+  s = names(split_status)[i] 
+  
+  #save results from next loop in this temporary list
+  temp = list()
+  
+  for(l in 1:length(a)){ #repeat for each species
+    
+    #subset for a specific species
+    b = a[[l]]
+    v = names(a)[l] #save that species name 
+    
+    
+      if(nrow(b) <= 100){
+        
+        act = fitact(b$time.rad, sample = "model", adj = 1, reps = 10000) 
+        
+      }else{
+        
+        act = fitact(b$time.rad, sample = "data", adj = 1, reps = 10000) 
+        
+      } #end conditional 
+      
+      
+      #Save it
+      temp[[l]] = act
+      names(temp)[l] = v
+      
+    
+  } # end loop per status 
+  
+  ## THE FINAL SAVE
+  actmod.list[[i]] = temp
+  names(actmod.list)[i] = s
+  
+} #end loop per species
+
+#keep environment clean
+rm(i,l,a,b,s,v,temp,act)
+
+#Save actmods in teh form of a RDS file
+saveRDS(actmod.list, 'SEA_Activity_species-overlap_actmods_20230328.RDS')
+```
+
+#Loop to calculate species pair overlaps in intact and degraded forests
+
+This section will focus on calculating the overlap coefficients between species pairs in both intact and degraded forests. We will be using the overlap coefficients later to observe whether there are significant changes in species overlap between forests at the community- and guild-level. Please bear in mind that this might take days to finish, therefore do replace the 10,000 boostraps samples to 10 if you are testing whether the code works.
+
+```{r}
+#Store results in empty list
+sp.overlap = list()
+
+i=1;k=1;l=1
+
+for (i in 1:length(actmod.list)) {#repeat for each status
+  
+  a = actmod.list[[i]]
+  b = names(actmod.list)[i]
+  
+  temp2 = list()
+  
+  for (k in 1:length(a)) {# repeat for first species
+    
+    c = a[[k]]
+    d = names(a)[k]
+    
+    temp = list()
+    
+    for (l in 1:length(a)) {# repeat for second species
+      
+      if(l != k){ # add conditional to avoid comparing activities of the same species
+        
+        # select another species
+        e = a[[l]]
+        f = names(a)[l] #save the other species name
+        
+        ## determine smallest sample size between the two comparisons 
+        h = min(length(c@data), length(e@data))
+        
+        ## Calculate temporal overlap
+        if(h <= 75){
+          
+          overlap.coef = overlapEst(c@data, e@data, adjust = 0.8, type = "Dhat1")
+          
+        }else{
+          
+          overlap.coef = overlapEst(c@data, e@data, adjust = 1, type = "Dhat4")
+          
+        }
+        
+        if(h <= 75){
+          
+          overlap.boot = bootstrap(c@data, e@data, nb = 10000, adjust = 0.8, type = "Dhat1")
+          
+          
+        }else{
+          
+          overlap.boot = bootstrap(c@data, e@data, nb = 10000, adjust = 1, type = "Dhat4")
+          
+          
+        }
+        
+        overlap.CI = bootCI(overlap.coef, overlap.boot, conf = 0.95)
+        
+        j = as.data.frame(overlap.CI)
+        
+        j = j["norm0",]
+        
+        m = as.data.frame(overlap.coef)
+        
+        n = cbind(m,j)
+        
+        # Add the first species
+        n$first_species = d
+        
+        # Add the comparison species
+        n$second_species = f
+        
+        #Add the status
+        n$status = b
+        
+        ## save the results! 
+        temp[[l]] = n
+        names(temp)[l] = f #save with the name of the critter we are comparing against
+        
+      } # end conditional preventing same-species comparisons 
+    }# End loop for second species
+    
+    ## Remove the null value in temp list (created by avoiding same-species comparison)
+    temp = temp[!sapply(temp, is.null)]
+    
+    #Save the results
+    temp2[[k]] = temp
+    names(temp2)[k] = d
+    
+  }#End loop for first species
+  
+  sp.overlap[[i]] = temp2
+  names(sp.overlap)[i] = b
+  
+}# End loop per status
+
+#Keep environment clean
+rm(a,b,c,d,e,f,m,i,k,l,temp,temp2,j,n,overlap.CI,h,overlap.boot,overlap.coef)
+
+#Save the species pair overlaps
+saveRDS(sp.overlap, "SEA_Activity_species_pair_overlaps_20230404.RDS")
+sp.overlap <- readRDS("SEA_Activity_species_pair_overlaps_20230404.RDS")
+
+## Rbind all of these single lines together into a single dataframe 
+a = do.call(rbind, sp.overlap)
+b = do.call(rbind, a) 
+c = do.call(rbind, b)
+rownames(c)= NULL #dont want confusing row names 
+c = c[order(c$first_species),] #organize by first species 
+
+#Keep environment clean
+rm(a,b)
+```
+
+#Filter species pairs into potential competitive and predatory interactions
+
+Here, we will begin the process of categorizing species pairs into potential competitive and predatory interactions which will be used later to compare the changes in overlaps between degraded and intact forests.
+
+
+Before we begin categorizing species pairs, we need to clean up our main overlap dataset by removing duplicates and adding species' guild information.
+
+### Establish the guild information of the first and second species within a species pair
+
+```{r}
+#Rearrange columns of our main overlap dataset
+df <- c %>% select(first_species,second_species,status,overlap.coef,lower,upper)
+rm(c) #Keep environment clean!
+
+#Remove duplicates 
+df <- df[!duplicated(df$overlap.coef),]
+
+#Load in trait data for mammals
+mammal_trait <- as.data.frame(read.csv('Species_info-20220512.csv'))
+
+#Select columns we need
+mammal_trait <- mammal_trait %>% 
+  select(genus_species, Guild, Body_mass) %>% #Select columns we need
+  mutate(Body_mass_kg = (Body_mass/1000)) %>% #Convert mass to kilograms
+  select(genus_species, Guild, Body_mass_kg)
+
+#Change column names
+colnames(mammal_trait) <- c('Species', 'Guild', 'Body_mass') #Change column names to rbind later
+
+#Select mammalian species that we need
+mammal_trait <- mammal_trait[mammal_trait$Species %in% c('Atherurus_macrourus', 'Echinosorex_gymnura', 'Helarctos_malayanus', 'Hemigalus_derbyanus', 'Hystrix_brachyura', 'Hystrix_crassispinis', 'Macaca_nemestrina', 'Martes_flavigula', 'Muntiacus_muntjak', 'Neofelis_nebulosa', 'Paguma_larvata', 'Panthera_tigris', 'Paradoxurus_hermaphroditus', 'Prionailurus_bengalensis', 'Prionodon_linsang', 'Rusa_unicolor', 'Sus_barbatus', 'Sus_scrofa', 'Tapirus_indicus', 'Tragulus_sp.', 'Trichys_fasciculata'),]
+
+#Load in trait data for birds
+bird_trait <- as.data.frame(read.csv('bird_guild_information_20221102.csv'))
+
+#Place back "_" to match those of mammals
+bird_trait$Species <- gsub(" ", "_", as.character(bird_trait$Species)) 
+
+#Select avian species that we need
+bird_trait <- bird_trait[bird_trait$Species %in% c('Argusianus_argus', 'Lophura_ignita'),]
+
+#Create an overall trait dataset
+species_trait <- rbind(mammal_trait, bird_trait)
+rm(mammal_trait, bird_trait)#Keep environment clean
+
+#Check whether there are inconsistencies or NAs
+anyNA(species_trait)
+sort(unique(species_trait$Guild)) #Weird feeding guild categorizations, need to make it consistent
+species_trait$Guild[species_trait$Guild %in% c('Herbivore', 'herbivore?')] = 'herbivore' #Herbivorous diets
+
+#Corrections for species diet
+species_trait$Guild[species_trait$Species == 'Macaca_nemestrina'] = 'omnivore'
+
+#Establish guild of first species
+first_species_trait = species_trait
+colnames(first_species_trait) = c("first_species", "first_species_diet", "first_species_body_mass")
+df <- merge(df, first_species_trait, by = "first_species")
+
+#Establish guild of second species
+second_species_trait = species_trait
+colnames(second_species_trait) = c("second_species", "second_species_diet", "second_species_body_mass")
+df <- merge(df, second_species_trait, by = "second_species")
+
+#Move 'first_species' column to be the first column
+df <- df %>% select(first_species, everything())
+
+#Keep environment clean
+rm(first_species_trait,second_species_trait)
+
+```
+
+###Categorize the body size of species based on body mass
+
+Here, we will categorize species into 'small', 'medium', and 'large' based on their body masses where 'small' is <4 kg, 'medium' is 4-20 kg, and 'large' is >20 kg.
+
+```{r}
+#Establish body size of first species
+df$first_species_body_size = 'NA'
+df$first_species_body_size[df$first_species_body_mass < 4] = 'small'
+df$first_species_body_size[df$first_species_body_mass > 20] = 'large'
+df$first_species_body_size[df$first_species_body_size == 'NA'] = 'medium' 
+
+#Establish body size of second species
+df$second_species_body_size = 'NA'
+df$second_species_body_size[df$second_species_body_mass < 4] = 'small'
+df$second_species_body_size[df$second_species_body_mass > 20] = 'large'
+df$second_species_body_size[df$second_species_body_size == 'NA'] = 'medium'
+```
+
+### Assigning trophic guilds
+
+Lastly, we will now assign the trophic guild of the first and second species within a species pair. Our study categorizes trophic guilds based on diet and body size which therefore results in 9 different combinations, namely 'large carnivore', 'large herbivore', 'large omnivore', 'medium carnivore', 'medium herbivore', 'medium omnivore', 'small carnivore', 'small herbivore', and 'small omnivore'.
+
+#####First species
+
+```{r}
+df$first_species_guild = 'NA'
+
+#Large species
+df$first_species_guild[df$first_species_body_size == 'large' & df$first_species_diet == 'carnivore'] = 'large_carnivore'
+df$first_species_guild[df$first_species_body_size == 'large' & df$first_species_diet == 'herbivore'] = 'large_herbivore'
+df$first_species_guild[df$first_species_body_size == 'large' & df$first_species_diet == 'omnivore'] = 'large_omnivore'
+
+#Medium species
+df$first_species_guild[df$first_species_body_size == 'medium' & df$first_species_diet == 'carnivore'] = 'medium_carnivore'
+df$first_species_guild[df$first_species_body_size == 'medium' & df$first_species_diet == 'herbivore'] = 'medium_herbivore'
+df$first_species_guild[df$first_species_body_size == 'medium' & df$first_species_diet == 'omnivore'] = 'medium_omnivore'
+
+#Small species
+df$first_species_guild[df$first_species_body_size == 'small' & df$first_species_diet == 'carnivore'] = 'small_carnivore'
+df$first_species_guild[df$first_species_body_size == 'small' & df$first_species_diet == 'herbivore'] = 'small_herbivore'
+df$first_species_guild[df$first_species_body_size == 'small' & df$first_species_diet == 'omnivore'] = 'small_omnivore'
+
+```
+
+#####Second species
+
+```{r}
+df$second_species_guild = 'NA'
+
+#Large species
+df$second_species_guild[df$second_species_body_size == 'large' & df$second_species_diet == 'carnivore'] = 'large_carnivore'
+df$second_species_guild[df$second_species_body_size == 'large' & df$second_species_diet == 'herbivore'] = 'large_herbivore'
+df$second_species_guild[df$second_species_body_size == 'large' & df$second_species_diet == 'omnivore'] = 'large_omnivore'
+
+#Medium species
+df$second_species_guild[df$second_species_body_size == 'medium' & df$second_species_diet == 'carnivore'] = 'medium_carnivore'
+df$second_species_guild[df$second_species_body_size == 'medium' & df$second_species_diet == 'herbivore'] = 'medium_herbivore'
+df$second_species_guild[df$second_species_body_size == 'medium' & df$second_species_diet == 'omnivore'] = 'medium_omnivore'
+
+#Small species
+df$second_species_guild[df$second_species_body_size == 'small' & df$second_species_diet == 'carnivore'] = 'small_carnivore'
+df$second_species_guild[df$second_species_body_size == 'small' & df$second_species_diet == 'herbivore'] = 'small_herbivore'
+df$second_species_guild[df$second_species_body_size == 'small' & df$second_species_diet == 'omnivore'] = 'small_omnivore'
+
+```
+
+###Establish competitive species pairs
+
+Here, we will determine which potential species pairs are experiencing competition. We categorized species pairs as competitive pair when they have the same trophic guild. Exceptions were made for clouded leopard and tigers as we hypothesized that they are experiencing competition.  
+
+```{r}
+#Create a 'interaction_type' column
+df$interaction_type = 'NA'
+
+#Carnivore guild
+df$interaction_type[df$first_species_guild == "small_carnivore" & df$second_species_guild == "small_carnivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "medium_carnivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "large_carnivore"] = 'competition'
+
+#Herbivore guild
+df$interaction_type[df$first_species_guild == "small_herbivore" & df$second_species_guild == "small_herbivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "medium_herbivore" & df$second_species_guild == "medium_herbivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "large_herbivore" & df$second_species_guild == "large_herbivore"] = 'competition'
+
+#Omnivore guild
+df$interaction_type[df$first_species_guild == "small_omnivore" & df$second_species_guild == "small_omnivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "medium_omnivore" & df$second_species_guild == "medium_omnivore"] = 'competition'
+df$interaction_type[df$first_species_guild == "large_omnivore" & df$second_species_guild == "large_omnivore"] = 'competition'
+
+```
+
+###Establish predatory species pairs
+
+Here, we will determine which potential species pairs are experiencing predation. We categorized species pairs as predatory pair when at least one of the species is carnivorous. We also assumed that the predator can only predate upon the prey when it has the same body size as the prey or has a larger body size than the prey. Exceptions were made for clouded leopards which can predate prey of all sizes. We also assume that omnivores are not predating on other species and carnivores do not predate on other carnivores of the same body size.
+
+```{r}
+df$interaction_type[df$first_species_guild == "small_carnivore" & df$second_species_guild == "small_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_herbivore" & df$second_species_guild == "small_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "small_carnivore" & df$second_species_guild == "small_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_omnivore" & df$second_species_guild == "small_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "small_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_herbivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "small_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_omnivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "small_carnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_carnivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "medium_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "medium_herbivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "medium_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "medium_omnivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "small_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_herbivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "small_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_omnivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "small_carnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "small_carnivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "medium_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "medium_herbivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "medium_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "medium_omnivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "medium_carnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "medium_carnivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "large_herbivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "large_herbivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+df$interaction_type[df$first_species_guild == "large_carnivore" & df$second_species_guild == "large_omnivore"] = 'predation'
+df$interaction_type[df$first_species_guild == "large_omnivore" & df$second_species_guild == "large_carnivore"] = 'predation'
+
+```
+
+###Remove unlikely interactions and edit incorrect interactions
+
+We will remove unlikely species interactions in this section due geographical barriers as well as species having similar diets/body size may occupy completely different habitat niches (e.g., terrestrial vs arboreal, eat grains/nuts vs eat leaves).
+
+```{r}
+#Great argus
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Echinosorex_gymnura')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Helarctos_malayanus')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Hystrix_brachyura')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Hystrix_crassispinis')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Argusianus_argus' | second_species != 'Tapirus_indicus')
+
+#Asiatic brush-tailed porcupine
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Echinosorex_gymnura')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Helarctos_malayanus')
+df$interaction_type[df$first_species == 'Atherurus_macrourus' & df$second_species == 'Hystrix_brachyura'] = 'competition'
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Hystrix_crassispinis')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Atherurus_macrourus' | second_species != 'Tapirus_indicus')
+
+#Moon rat
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Helarctos_malayanus')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Hystrix_brachyura')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Hystrix_crassispinis')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Lophura_ignita')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Echinosorex_gymnura' | second_species != 'Trichys_fasciculata')
+
+#Sun bear
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Hemigalus_derbyanus')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Hystrix_brachyura')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Hystrix_crassispinis')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Lophura_ignita')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Martes_flavigula')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Muntiacus_muntjak')
+df$interaction_type[df$first_species == 'Helarctos_malayanus' & df$second_species == 'Neofelis_nebulosa'] = 'predation'
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Prionodon_linsang')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Helarctos_malayanus' | second_species != 'Trichys_fasciculata')
+
+#Banded civet
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Hystrix_brachyura')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Hystrix_crassispinis')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Hemigalus_derbyanus' | second_species != 'Tapirus_indicus')
+
+#Malayan porcupine
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Lophura_ignita')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Martes_flavigula')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Prionodon_linsang')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Hystrix_brachyura' | second_species != 'Tragulus_sp.')
+df$interaction_type[df$first_species == 'Hystrix_brachyura' & df$second_species == 'Trichys_fasciculata'] = 'competition'
+
+#Bornean porcupine
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Lophura_ignita')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Martes_flavigula')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Panthera_tigris')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Prionodon_linsang')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Hystrix_crassispinis' | second_species != 'Tragulus_sp.')
+df$interaction_type[df$first_species == 'Hystrix_crassispinis' & df$second_species == 'Trichys_fasciculata'] = 'competition'
+
+#Crested fireback pheasants
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Macaca_nemestrina')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Lophura_ignita' | second_species != 'Tapirus_indicus')
+
+#Pig-tailed macaque
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Martes_flavigula')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Prionodon_linsang')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Macaca_nemestrina' | second_species != 'Trichys_fasciculata')
+
+#Yellow-throated marten
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Muntiacus_muntjak')
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Martes_flavigula' | second_species != 'Tapirus_indicus')
+
+#Southern red muntjac
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Paguma_larvata')
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Prionodon_linsang')
+df$interaction_type[df$first_species == 'Muntiacus_muntjak' & df$second_species == 'Rusa_unicolor'] = 'competition'
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Sus_scrofa')
+df$interaction_type[df$first_species == 'Muntiacus_muntjak' & df$second_species == 'Tapirus_indicus'] = 'competition'
+df$interaction_type[df$first_species == 'Muntiacus_muntjak' & df$second_species == 'Tragulus_sp.'] = 'competition'
+df <- filter(df, first_species != 'Muntiacus_muntjak' | second_species != 'Trichys_fasciculata')
+
+#Clouded leopard
+df$interaction_type[df$first_species == 'Neofelis_nebulosa' & df$second_species == 'Panthera_tigris'] = 'competition'
+df$interaction_type[df$first_species == 'Neofelis_nebulosa' & df$second_species == 'Rusa_unicolor'] = 'predation'
+df$interaction_type[df$first_species == 'Neofelis_nebulosa' & df$second_species == 'Sus_barbatus'] = 'predation'
+df$interaction_type[df$first_species == 'Neofelis_nebulosa' & df$second_species == 'Sus_scrofa'] = 'predation'
+df$interaction_type[df$first_species == 'Neofelis_nebulosa' & df$second_species == 'Tapirus_indicus'] = 'predation'
+
+#Masked palm civet
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Paradoxurus_hermaphroditus')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Prionailurus_bengalensis')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Prionodon_linsang')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Paguma_larvata' | second_species != 'Trichys_fasciculata')
+
+#Common palm civet
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Paradoxurus_hermaphroditus' | second_species != 'Trichys_fasciculata')
+
+#Leopard cat
+df <- filter(df, first_species != 'Prionailurus_bengalensis' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Prionailurus_bengalensis' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Prionailurus_bengalensis' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Prionailurus_bengalensis' | second_species != 'Tapirus_indicus')
+
+#Banded linsang
+df <- filter(df, first_species != 'Prionodon_linsang' | second_species != 'Rusa_unicolor')
+df <- filter(df, first_species != 'Prionodon_linsang' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Prionodon_linsang' | second_species != 'Sus_scrofa')
+df <- filter(df, first_species != 'Prionodon_linsang' | second_species != 'Tapirus_indicus')
+
+#Sambar deer
+df <- filter(df, first_species != 'Rusa_unicolor' | second_species != 'Sus_barbatus')
+df <- filter(df, first_species != 'Rusa_unicolor' | second_species != 'Sus_scrofa')
+df$interaction_type[df$first_species == 'Rusa_unicolor' & df$second_species == 'Tragulus_sp.'] = 'competition'
+df <- filter(df, first_species != 'Rusa_unicolor' | second_species != 'Trichys_fasciculata')
+
+#Bearded pig
+df <- filter(df, first_species != 'Sus_barbatus' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Sus_barbatus' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Sus_barbatus' | second_species != 'Trichys_fasciculata')
+
+#Wild boar
+df <- filter(df, first_species != 'Sus_scrofa' | second_species != 'Tapirus_indicus')
+df <- filter(df, first_species != 'Sus_scrofa' | second_species != 'Tragulus_sp.')
+df <- filter(df, first_species != 'Sus_scrofa' | second_species != 'Trichys_fasciculata')
+
+#Malay tapir
+df$interaction_type[df$first_species == 'Tapirus_indicus' & df$second_species == 'Tragulus_sp.'] = 'competition'
+df <- filter(df, first_species != 'Tapirus_indicus' | second_species != 'Trichys_fasciculata')
+
+
+```
+
+After filtering species pairs, we are left with 70 competitive species pairs and 122 predatory species pairs. Here, we will save the respective species pairs into two separate datasets as a csv file.
+
+```{r}
+#Filter out competitive and predatory species pairs respectively
+comp <- df %>% filter(interaction_type == 'competition')
+pred <- df %>% filter(interaction_type == 'predation')
+
+#Save them!
+write.csv(comp, 'SEA_Activity_competition_species_overlap_20230508.csv')
+write.csv(pred, 'SEA_Activity_predation_species_overlap_20230508.csv')
+
+#Keep environment clean!
+rm(sp.overlap, species_trait)
+```
+
+#Determining changes in species overlap between intact and degraded forests
+
+Here, we will begin the process of determining changes in species overlaps between the two types of forests. We will be using a paired t-test to test this. But first, we will need to sort the dataframe before conducting any analyses.
+
+###Changes in competitive species overlaps at the community-level (i.e., overall change)
+
+```{r}
+#Determine the type of competition
+comp$competition_type = "NA"
+comp$competition_type[comp$first_species_diet == 'carnivore' & comp$second_species_diet == 'carnivore'] = 'carnivore-carnivore'
+comp$competition_type[comp$first_species_diet == 'herbivore' & comp$second_species_diet == 'herbivore'] = 'herbivore-herbivore'
+comp$competition_type[comp$first_species_diet == 'omnivore' & comp$second_species_diet == 'omnivore'] = 'omnivore-omnivore'
+
+```
+
+Let's check the assumptions first and then carry out the t-test.
+
+```{r}
+#Check normality
+qqnorm(comp$overlap.coef);qqline(comp$overlap.coef, col = 2) #More or less normal
+
+#Check variance of both statuses
+var(comp$overlap.coef[comp$status == "Degraded"]) #0.0724
+var(comp$overlap.coef[comp$status == "Intact"]) #0.0834 (Unequal variance)
+
+#Check the mean of both statuses
+mean(comp$overlap.coef[comp$status == "Degraded"]) #0.572
+mean(comp$overlap.coef[comp$status == "Intact"]) #0.564
+
+#Conduct a paired t-test
+t <- t.test(overlap.coef ~ status, data = comp, var.eq = FALSE, paired = T) #p-value = 0.824
+
+```
+
+###Visualising the changes in competitive species overlap at the community-level
+
+Here, we will be using ggplot2() to visualize our results using a combination of strip plots and grouped error bars. 
+
+```{r}
+#Set factor levels for each status
+comp$status = factor(comp$status, levels = c("Intact", "Degraded"))
+
+## Visualise data by using strip plot and grouped error bars
+p <- ggplot(comp, aes(x = status, y = overlap.coef, color = status)) +
+  
+  #stat_summary(geom = 'bar', fun = mean, width = 0.6) +
+  
+  geom_jitter(position = position_jitter(0.2)) +
+  
+  stat_summary(geom = 'point', fun = mean, size = 4) +
+  
+  stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75) +
+  
+  scale_color_manual(values = c("Intact" = "#4169e1", "Degraded" = "#FC6600")) +
+  
+  coord_cartesian(ylim = c(0.0,1.0)) +
+  
+  scale_y_continuous(expand = c(0,0)) +
+  
+  labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+  
+  theme_classic() +
+  
+  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12))
+
+p
+
+#Save the plot!
+ggsave("SEA_Activity_competition_community-level_plot_20230508.pdf", plot = p, width = 8, height = 6, units = "in")
+
+#Keep environment clean!
+rm(p,t)
+```
+
+Lastly, we will store all the summary statistics for the community-level changes in competitive species overlap in a table for the supplementary table
+
+```{r}
+#Create a table to store summary statistics
+column_names <- c('status', 'sample_size', 'mean', 'upper_95%CI', 'lower_95%CI')
+comp_sum <- as.data.frame(matrix(NA, nrow = 2, ncol = 5))
+colnames(comp_sum) <- column_names
+
+#Loop to generate summary statistics for each FLII status
+
+status <- c('Intact', 'Degraded') #Create a vector for looping
+
+i = 1
+
+for (i in 1:length(status)) {#Loop for each status
+  
+  a = status[i] #Select a status
+  b = comp[comp$status == a,] #Subset the dataframe for that status
+ 
+  comp_sum$status[i] = a #Save status name
+  comp_sum$sample_size[i] = nrow(b) #Include sample size
+  
+  c = mean_cl_boot(b$overlap.coef, conf.int = .95) #Calculate the sample mean and 95% confidence interval
+  
+  comp_sum$mean[i] = c$y
+  comp_sum$`upper_95%CI`[i] = c$ymax
+  comp_sum$`lower_95%CI`[i] = c$ymin
+
+}
+
+#Save it!
+write.csv(comp_sum, "SEA_Activity_competition_community-level_summary_statistics_20230508.csv", row.names = F)
+
+#Keep environment clean!
+rm(a,b,c,i,column_names,status,comp_sum)
+
+```
+
+###Changes in competitive species overlap at the guild-level
+
+Similarly, we will be using the same steps to determine the changes in species overlap, however, this time we will further split the data based on their diet. Also, since the number of species pairs are low and are not normally distributed, we used the non-parametric Mann-Whitney U Test to determine change in species overlap.
+
+```{r}
+#Create a vector for looping
+comp_type = c("carnivore-carnivore", "herbivore-herbivore", "omnivore-omnivore")
+
+#Create a dataframe to fill
+colnamestoextract = c("competition_type", "n_degraded", "n_intact","mean_intact", "upper_95%CI_intact","lower_95%CI_intact", "mean_degraded", "upper_95%_degraded","lower_95%_degraded", "U", "p_value")
+empty = as.data.frame(matrix(NA,nrow = length(comp_type),ncol = 11))
+colnames(empty) = colnamestoextract
+
+#Loop to generate and store results
+i = 1
+
+for (i in 1:length(comp_type)) {
+  
+  a = comp_type[i]
+  b = comp[comp$competition_type == a,]
+  
+  c = wilcox.test(overlap.coef ~ status, data = b, paired = TRUE)
+  
+  d = b[b$status == "Degraded",]
+  e = b[b$status == "Intact",]
+  
+  empty$competition_type[i] = a
+  empty$n_degraded[i] = nrow(d)
+  empty$n_intact[i] = nrow(e)
+  
+  f = mean_cl_boot(d$overlap.coef, conf.int = .95)
+  g = mean_cl_boot(e$overlap.coef, conf.int = .95)
+  
+  empty$mean_degraded[i] = f$y
+  empty$`upper_95%_degraded`[i] = f$ymax
+  empty$`lower_95%_degraded`[i] = f$ymin
+  
+  empty$mean_intact[i] = g$y
+  empty$`upper_95%CI_intact`[i] = g$ymax
+  empty$`lower_95%CI_intact`[i] = g$ymin
+  
+  empty$U[i] = c$statistic
+  empty$p_value[i] = c$p.value
+  
+}
+
+#Save the results!
+write.csv(empty, "SEA_Activity_competition_guild-level_summary_statistics_20230508.csv", row.names = F)
+
+#Keep environment clean
+rm(a,b,c,d,e,f,g,i,colnamestoextract,comp_type,empty)
+
+```
+
+###Visualising the changes in competitive species overlap at the guild-level
+
+```{r}
+#Set factor levels for each status
+comp$status = factor(comp$status, levels = c("Intact", "Degraded"))
+
+#Create competition_FLII_status column
+comp$competition_FLII_status = "NA"
+comp$competition_FLII_status[comp$status == "Degraded" & comp$competition_type == "carnivore-carnivore"] = "degraded-carnivore"
+comp$competition_FLII_status[comp$status == "Degraded" & comp$competition_type == "herbivore-herbivore"] = "degraded-herbivore"
+comp$competition_FLII_status[comp$status == "Degraded" & comp$competition_type == "omnivore-omnivore"] = "degraded-omnivore"
+comp$competition_FLII_status[comp$status == "Intact" & comp$competition_type == "carnivore-carnivore"] = "intact-carnivore"
+comp$competition_FLII_status[comp$status == "Intact" & comp$competition_type == "herbivore-herbivore"] = "intact-herbivore"
+comp$competition_FLII_status[comp$status == "Intact" & comp$competition_type == "omnivore-omnivore"] = "intact-omnivore"
+
+#Visualise using strip plots and grouped error bars
+
+p = ggplot(comp, aes(x = competition_type, y = overlap.coef, color = status)) +
+
+    geom_jitter(position = position_jitterdodge(0.1)) +
+
+    stat_summary(geom = 'point', fun = mean, size = 4, position = position_dodge(0.75)) +
+
+    stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75, position = position_dodge(0.75)) +
+
+    scale_color_manual(values = c("Intact" = "#4169e1", "Degraded" = "#FC6600")) +
+
+    scale_y_continuous(expand = c(0,0)) +
+
+    coord_cartesian(ylim = c(0, 1.0)) +
+
+    labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+
+    theme_classic() +
+
+    theme(axis.text = element_text(size = 12), axis.title = element_blank(), legend.position = "none")
+
+
+ p
+
+# p = ggplot(comp, aes(x = status, y = overlap.coef, color = competition_FLII_status)) +
+# 
+#     geom_jitter(position = position_jitterdodge(0.1)) +
+# 
+#     stat_summary(geom = 'point', fun = mean, size = 4, position = position_dodge(0.75)) +
+# 
+#     stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75, position = position_dodge(0.75)) +
+# 
+#     scale_color_manual(values = c("degraded-carnivore" = "#FFBF00", "degraded-herbivore" = "#FC6600", "degraded-omnivore" = "#964000",
+#                                 "intact-carnivore" = "#839deb", "intact-herbivore" = "#4169e1", "intact-omnivore" = "#1d44b8")) +
+# 
+#     scale_y_continuous(expand = c(0,0)) +
+# 
+#     coord_cartesian(ylim = c(0, 1.0)) +
+# 
+#     labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+# 
+#     theme_classic() +
+# 
+#     theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12))
+# 
+# 
+#  p
+
+#Save the plot!
+ggsave("SEA_Activity_competition_guild-level_plot_20231013.pdf", plot = p, width = 8, height = 6, units = "in")
+
+#Keep environment clean!
+rm(p)
+```
+
+###Changes in predatory species overlaps at the community-level (i.e., overall change)
+
+```{r}
+#Check normality
+qqnorm(pred$overlap.coef);qqline(pred$overlap.coef, col = 2) #More or less normal
+
+#Check variance of both statuses
+var(pred$overlap.coef[pred$status == "Degraded"]) #0.0415
+var(pred$overlap.coef[pred$status == "Intact"]) #0.0674, unequal variances
+
+#Conduct a paired t-test
+t <- t.test(overlap.coef ~ status, data = pred, var.eq = F, paired = T) #p-value = 0.308
+
+```
+
+###Visualising the changes in predatory species overlap at the community-level
+
+```{r}
+#Set factor levels for each status
+pred$status = factor(pred$status, levels = c("Intact", "Degraded"))
+
+## Visualise data by using strip plot and error bars
+
+p <- ggplot(pred, aes(x = status, y = overlap.coef, color = status)) +
+  
+  #stat_summary(geom = 'bar', fun = mean, width = 0.6) +
+  
+  geom_jitter(position = position_jitter(0.2)) +
+  
+  stat_summary(geom = 'point', fun = mean, size = 4) +
+  
+  stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75) +
+  
+  scale_color_manual(values = c("Intact" = "#4169e1", "Degraded" = "#FC6600")) +
+  
+  coord_cartesian(ylim = c(0.0,1.0)) +
+  
+  scale_y_continuous(expand = c(0,0)) +
+  
+  labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+  
+  theme_classic() +
+  
+  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12))
+
+p
+
+#Save the plot!
+ggsave("SEA_Activity_predation_community-level_plot_20230508.pdf", plot = p, width = 8, height = 6, units = "in")
+
+#Keep environment clean!
+rm(p,t)
+
+#Create a table to store summary statistics
+column_names <- c('status', 'sample_size', 'mean','upper_95%CI', 'lower_95%CI')
+pred_sum <- as.data.frame(matrix(NA, nrow = 2, ncol = 5))
+colnames(pred_sum) <- column_names
+
+#Loop to generate summary statistics for each FLII status
+
+status <- c('Intact', 'Degraded') #Create a vector for looping
+
+i = 1
+
+for (i in 1:length(status)) {#Loop for each status
+  
+  a = status[i] #Select a status
+  b = pred[pred$status == a,] #Subset the dataframe for that status
+  
+  pred_sum$status[i] = a #Save status name
+  pred_sum$sample_size[i] = nrow(b) #Include sample size
+  
+  c = mean_cl_boot(b$overlap.coef, conf.int = .95) #Calculate the sample mean and 95% confidence interval
+  
+  pred_sum$mean[i] = c$y
+  pred_sum$`upper_95%CI`[i] = c$ymax
+  pred_sum$`lower_95%CI`[i] = c$ymin
+  
+}
+
+#Save the results!
+write.csv(pred_sum, "SEA_Activity_predation_community-level_summary_statistics_20230508.csv", row.names = F)
+
+#Keep environemnt clean!
+rm(a,b,c,pred_sum,i,status,column_names)
+```
+
+###Changes in predatory species overlap at the guild-level
+
+```{r}
+#Determine the type of predation
+pred$predation_type = 'NA'
+pred$predation_type[pred$first_species_diet == 'carnivore' & pred$second_species_diet == 'carnivore'] = 'carnivore-carnivore'
+pred$predation_type[pred$first_species_diet == 'carnivore' & pred$second_species_diet == 'herbivore'] = 'carnivore-herbivore'
+pred$predation_type[pred$first_species_diet == 'herbivore' & pred$second_species_diet == 'carnivore'] = 'carnivore-herbivore'
+pred$predation_type[pred$first_species_diet == 'carnivore' & pred$second_species_diet == 'omnivore'] = 'carnivore-omnivore'
+pred$predation_type[pred$first_species_diet == 'omnivore' & pred$second_species_diet == 'carnivore'] = 'carnivore-omnivore'
+
+#Create a vector for looping
+pred_type = c('carnivore-carnivore', 'carnivore-herbivore', 'carnivore-omnivore')
+
+#Create a dataframe to fill
+colnamestoextract = c("predation_type", "n_degraded", "n_intact","mean_intact", "upper_95%CI_intact","lower_95%CI_intact","mean_degraded", "upper_95%CI_degraded", "lower_95%CI_degraded","U", "p_value")
+empty = as.data.frame(matrix(NA,nrow = length(pred_type),ncol = 11))
+colnames(empty) = colnamestoextract
+
+#Loop to generate and store results
+
+i = 1
+
+for (i in 1:length(pred_type)) {
+  
+  a = pred_type[i]
+  b = pred[pred$predation_type == a,]
+  
+  c = wilcox.test(overlap.coef ~ status, data = b, paired = TRUE)
+  
+  d = b[b$status == "Degraded",]
+  e = b[b$status == "Intact",]
+  
+  empty$predation_type[i] = a
+  empty$n_degraded[i] = nrow(d)
+  empty$n_intact[i] = nrow(e)
+  
+  f = mean_cl_boot(d$overlap.coef, conf.int = .95)
+  g = mean_cl_boot(e$overlap.coef, conf.int = .95)
+  
+  empty$mean_degraded[i] = f$y
+  empty$`upper_95%CI_degraded`[i] = f$ymax
+  empty$`lower_95%CI_degraded`[i] = f$ymin
+  
+  empty$mean_intact[i] = g$y
+  empty$`upper_95%CI_intact`[i] = g$ymax
+  empty$`lower_95%CI_intact`[i] = g$ymin
+  
+  empty$U[i] = c$statistic
+  empty$p_value[i] = c$p.value
+  
+}
+
+#Save the results!
+write.csv(empty, "SEA_Activity_predation_guild-level_summary_statistics_20230508.csv", row.names = F)
+
+#Keep environment clean
+rm(a,b,c,d,e,f,g,i,colnamestoextract,pred_type,empty)
+
+```
+
+###Visualising the changes in predatory species overlap at the guild-level
+
+```{r}
+#Set factor values
+pred$status = factor(pred$status, levels = c("Intact", "Degraded"))
+
+#Create predation_FLII_status column
+pred$predation_FLII_status = "NA"
+pred$predation_FLII_status[pred$status == "Degraded" & pred$predation_type == "carnivore-carnivore"] = "degraded-carnivore-carnivore"
+pred$predation_FLII_status[pred$status == "Degraded" & pred$predation_type == "carnivore-herbivore"] = "degraded-carnivore-herbivore"
+pred$predation_FLII_status[pred$status == "Degraded" & pred$predation_type == "carnivore-omnivore"] = "degraded-carnivore-omnivore"
+pred$predation_FLII_status[pred$status == "Intact" & pred$predation_type == "carnivore-carnivore"] = "intact-carnivore-carnivore"
+pred$predation_FLII_status[pred$status == "Intact" & pred$predation_type == "carnivore-herbivore"] = "intact-carnivore-herbivore"
+pred$predation_FLII_status[pred$status == "Intact" & pred$predation_type == "carnivore-omnivore"] = "intact-carnivore-omnivore"
+
+#Visualise the results
+
+p = ggplot(pred, aes(x = predation_type, y = overlap.coef, color = status)) +
+  
+  geom_jitter(position = position_jitterdodge(0.1)) +
+  
+  stat_summary(geom = 'point', fun = mean, size = 4, position = position_dodge(0.75)) +
+  
+  stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75, position = position_dodge(0.75)) +
+  
+  scale_color_manual(values = c("Intact" = "#4169e1", "Degraded" = "#FC6600")) +
+  
+  scale_y_continuous(expand = c(0,0)) +
+  
+  coord_cartesian(ylim = c(0, 1.0)) +
+  
+  #labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+  
+  theme_classic() +
+  
+  theme(axis.text = element_text(size = 12), axis.title = element_blank(), legend.position = "none")
+
+
+p 
+
+
+
+
+
+
+# p = ggplot(pred, aes(x = status, y = overlap.coef, color = predation_FLII_status)) +
+#   
+#   geom_jitter(position = position_jitterdodge(0.1)) +
+#   
+#   stat_summary(geom = 'point', fun = mean, size = 4, position = position_dodge(0.75)) +
+#   
+#   stat_summary(geom = 'errorbar', fun.data = mean_cl_boot, width = 0.4, size = 0.75, position = position_dodge(0.75)) +
+#   
+#   scale_color_manual(values = c("degraded-carnivore-carnivore" = "#FFBF00", "degraded-carnivore-herbivore" = "#FC6600", "degraded-carnivore-omnivore" = "#964000",
+#                                 "intact-carnivore-carnivore" = "#839deb", "intact-carnivore-herbivore" = "#4169e1", "intact-carnivore-omnivore" = "#1d44b8")) +
+#   
+#   scale_y_continuous(expand = c(0,0)) +
+#   
+#   coord_cartesian(ylim = c(0, 1.0)) +
+#   
+#   labs(x = "FLII status", y = "Mean estimated overlap coefficient (∆)") +
+#   
+#   theme_classic() +
+#   
+#   theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12))
+# 
+# 
+# p 
+
+#Save the plot!
+ggsave("SEA_Activity_predation_guild-level_plot_20231013.pdf", plot = p, width = 8, height = 6, units = "in")
+
+#Keep environment clean!
+rm(p)
+```
+

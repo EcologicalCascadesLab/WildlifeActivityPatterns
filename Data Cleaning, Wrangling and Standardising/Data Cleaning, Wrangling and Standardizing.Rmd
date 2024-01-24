@@ -1,0 +1,681 @@
+---
+title: "Dataset Preparation for Temporal Activity Analyses"
+author: "Samuel Xin Tham Lee"
+date: "2023-02-28"
+output: html_document
+---
+
+#Set working Directory
+
+```{r setup, include=FALSE}
+## start with clean enviro
+rm(list = ls())
+
+### Set Working directories
+## Markdown requires ABSOLUTE paths, not relative paths. 
+# Adjust the code accordingly for your machine. 
+
+# set WD --> must be run in console, not code chunk! (Please change this accordingly to your own WD)
+setwd("C:/Users/samle/OneDrive/Desktop/Code Scripts for Githb Upload/Data Cleaning, Wrangling and Standardising") 
+
+# and knit to the same place. 
+knitr::opts_knit$set(root.dir = "C:/Users/samle/OneDrive/Desktop/Code Scripts for Githb Upload/Data Cleaning, Wrangling and Standardising")
+```
+
+#Load the relevant libraries
+
+If you haven't download any of the packages, you can use the install.packages() function in r.
+
+```{r}
+library(tidyverse) 
+library(sp) 
+library(activity)
+library(overlap)
+library(plyr)
+```
+
+# Load the relevant dataframes
+
+Here, these dataframes mentioned are as follows:
+
+* Independent captures of species
+* The forest integrity (FLII) covariate values
+* The guild information (diet and body mass) and IUCN conservation status of species
+* The common names of each species
+* The metadata file conatining our camera-level covariates and coordinates
+
+```{r}
+caps = as.data.frame(read.csv("ECL full captures dataset.csv")) #our full captures dataframe
+mammal_guild = as.data.frame(read.csv("Mammal trait information.csv")) #guild information for mammals (has been previously cleaned)
+bird_guild = as.data.frame(read.csv("Bird trait information.csv")) #guild information for birds (has been previously cleaned)
+common_names = as.data.frame(read.csv("Species Common Names.csv")) #common names of species
+covs = as.data.frame(read.csv("ECL full camera-level metadata (with coordinates).csv")) #metadata file
+```
+
+#Cleaning the captures dataframe 
+
+Here, we filter out unclear taxon, domesticated taxon and humans as well as correcting the species name of certain taxon.
+
+```{r}
+sort(unique(caps$Species)) #Check the names of species present within the captures dataframe
+
+#Change Hystricidae_spp to Hystrix_brachyura for sumatran surveys
+caps$Species[caps$Species == "Hystricidae_spp" & caps$survey_id == "BBS"] = "Hystrix_brachyura"
+caps$Species[caps$Species == "Hystricidae_spp" & caps$survey_id == "Kerinci"] = "Hystrix_brachyura"
+caps$Species[caps$Species == "Hystricidae_spp" & caps$survey_id == "Leuser"] = "Hystrix_brachyura"
+
+#Change Lophura rufa to Lophura ignita for now. Lophura ignita will represent all crested fireback pheasants found in our sites. (*I have checked the body masses and guild info beforehand and I found that both were having same body masses and diet so such a change is fine in this case) 
+caps$Species[caps$Species == "Lophura_rufa"] = "Lophura_ignita"
+
+#Remove Danum2020 surveys (Covariates not calculated for this survey)
+caps = filter(caps, !survey_id == "Danum_2020")
+
+#Filter humans and unclear taxons
+caps = caps %>% filter(!caps$Species %in% c('Accipitridae_spp', 'Alcedinidae_spp', 'Arborophila_sp.', 'Argus_sp.', 'bat', 'bat_bird?', 'bird', 'Bird_Pitta', 'Bucerotidae_spp', 'Capricornis_sp.', 'Cervidae_spp', 'Crested_fireback_pheasant', 'Crested_fireback_pheasent', 'Elephas_maximus_Domestic', 'Error', 'Gallus_gallus_domesticus', 'Gallus_sp.', 'Ghost', 'Herpestidae_spp', 'Homo_sapiens', 'Homo_sapiens_hiker', 'Homo_sapiens_Poacher', 'Homo_sapiens_ranger', 'Homo_sapiens_researcher', 'Homo_sapiens_tourist', 'Insect', 'Lizard', 'Lutrinae?', 'Macaca_sp.', 'Mammalia?', 'Manidae_spp', 'Maxomys_sp.', 'Motacilla_sp.', 'Muridae_spp', 'Pellorneidae_spp', 'Phasianidae_spp', 'Pongo_sp.', 'Presbytis_sp.', 'Rattus_sp.', 'remove', 'Rodent', 'Scandentia?', 'Scincidae_spp', 'Sciuridae_spp', 'Scorpion', 'SetUp_Collect', 'Small_mammal?', 'Soricidae_spp', 'Strigiformes', 'Sus_scrofa_Domestic', 'Tamiops_sp.', 'Tarsiidae_spp', 'Tupaia_sp.', 'unknown', 'Unknown', 'Ursidae_spp', 'Varanus_sp.', 'Muntiacus_sp.', 'Canis_lupus_familiaris', 'Bos_taurus'))
+
+
+```
+
+#Removing rodents, treeshrews and birds less than 1 kg 
+
+Here, we attempted to remove rodents, treeshrews and birds less than 1 kg due to uncertainty in species identification in certain sites. We did this by incorporating the guild information mentioned above.
+
+```{r}
+#Create a dataframe only containing bird captures (let's filter birds first!)
+bird_caps = caps %>% filter(caps$Species %in% c('Acridotheres_javanicus', 'Alophoixus_phaeocephalus', 'Amaurornis_phoenicurus', 'Anthreptes_malacensis', 'Arborophila_charltonii', 'Argusianus_argus', 'Carpococcyx_radiceus', 'Centropus_sinensis', 'Chalcophaps_indica', 'Copsychus_malabaricus','Copsychus_pyrropygus', 'Copsychus_saularis', 'Dendronanthus_indicus', 'Dinopium_benghalense', 'Ducula_badia', 'Enicurus_leschenaulti', 'Erythropitta_ussheri', 'Eupetes_macrocerus', 'Ficedula_zanthopygia', 'Gallus_gallus', 'Garrulax_canorus', 'Garrulax_palliatus', 'Geokichla_interpres', 'Gracula_religiosa', 'Hydrornis_baudii', 'Hydrornis_irena', 'Kenopia_striata', 'Lophura_bulweri', 'Lophura_ignita', 'Malacopteron_affine', 'Nisaetus_alboniger', 'Nisaetus_cirrhatus', 'Orthotomus_atrogularis', 'Pellorneum_capistratum', 'Pellorneum_malaccense', 'Pernis_apivorus', 'Pitta_sordida', 'Polyplectron_malacense', 'Rallina_fasciata', 'Rhipidura_javanica', 'Rollulus_rouloul', 'Spilornis_cheela', 'Synoicus_chinensis', 'Zoothera_citrina'))
+```
+
+Now, we can remove bird species that are less than 1 kg
+
+```{r}
+#Insert "_" to match bird_caps
+bird_guild$Species = gsub(" ", "_", bird_guild$Species)
+
+#Merge them
+bird_caps = merge(bird_caps, bird_guild, by = "Species")
+
+#Remove birds that are <1 kg
+bird_caps = bird_caps %>% 
+  filter(Body_mass >= 1)
+
+```
+
+###Accounting for all mammals and their guild information
+
+```{r}
+#Create a mammal captures dataframe
+mammal_caps = caps %>% filter(!caps$Species %in% c('Acridotheres_javanicus', 'Alophoixus_phaeocephalus', 'Amaurornis_phoenicurus', 'Anthreptes_malacensis', 'Arborophila_charltonii', 'Argusianus_argus', 'Carpococcyx_radiceus', 'Centropus_sinensis', 'Chalcophaps_indica', 'Copsychus_malabaricus',  'Copsychus_pyrropygus', 'Copsychus_saularis', 'Dendronanthus_indicus', 'Dinopium_benghalense', 'Ducula_badia', 'Enicurus_leschenaulti', 'Erythropitta_ussheri', 'Eupetes_macrocerus', 'Ficedula_zanthopygia', 'Gallus_gallus', 'Garrulax_canorus', 'Garrulax_palliatus', 'Geokichla_interpres', 'Gracula_religiosa', 'Hydrornis_baudii', 'Hydrornis_irena', 'Kenopia_striata', 'Lophura_bulweri', 'Lophura_ignita', 'Malacocincla_malaccensis', 'Malacopteron_affine', 'Nisaetus_alboniger', 'Nisaetus_cirrhatus', 'Orthotomus_atrogularis', 'Pellorneum_capistratum', 'Pellorneum_malaccense', 'Pernis_apivorus', 'Pitta_sordida', 'Polyplectron_malacense', 'Rallina_fasciata', 'Rhipidura_javanica', 'Rollulus_rouloul', 'Spilornis_cheela', 'Synoicus_chinensis', 'Zoothera_citrina', 'Bubalus_bubalis'))
+```
+
+Here, we will need to organise our mammal_guild dataframe so that we can merge with captures later. We also need to check whether all mammal guild information is accounted for.
+
+```{r}
+mammal_guild = mammal_guild %>% 
+  select('genus_species', 'Guild', 'Body_mass') %>% 
+  mutate(Body_mass_kg = Body_mass/1000) %>% 
+  select(-Body_mass)
+
+colnames(mammal_guild) <- c('Species', 'Guild', 'Body_mass')
+
+setdiff(mammal_caps$Species, mammal_guild$Species) #See whether all mammals are accounted for!
+```
+
+Now we can remove mammals that are less than 1 kg.
+
+```{r}
+#Merge them
+mammal_caps = merge(mammal_caps, mammal_guild, by = "Species")
+
+#Filter them out! (Notes: Linsangs are retained due to them being charismatic so very easy to identify to the species-level)
+mammal_caps = mammal_caps  %>% 
+  filter(!Species %in% c('Callosciurus_finlaysonii', 'Callosciurus_notatus', 'Callosciurus_prevostii', 'Lariscus_hosei', 'Lariscus_insignis', 'Leopoldamys_sabanus', 'Rattus_tiomanicus', 'Rhinosciurus_laticaudatus', 'Sundasciurus_hippurus', 'Tupaia_glis'))
+```
+
+Now, we can merge both the bird and mammal captures dataset
+
+```{r}
+caps <- rbind(mammal_caps, bird_caps)
+rm(mammal_caps, bird_caps, mammal_guild, bird_guild) #Keep environment clean!
+```
+
+###Accounting for all reptiles and their guild information
+
+There is only two reptiles that are identifiable and frequent our cameras, namely the Asian water monitor (*Varanus salvator*) and the Clouded monitor (*Varanus nebulosus*). Their captures were already included within the mammal captures dataframe before combining with bird captures. Their guild information is derived from previously published journal articles rather than a database. Here are the respective links as follows:
+
+* [Body mass of Asian water monitor](https://doi.org/10.1016/0006-3207(96)00008-0)
+
+* [Body mass of clouded monitor](https://doi.org/10.6084/m9.figshare.627530.v1)
+
+* [Feeding guild/diet of both *Varanus* lizards](https://doi.org/10.1038/s41467-020-19022-2)
+
+```{r}
+caps$Guild[caps$Species %in% c('Varanus_salvator', 'Varanus_nebulosus')] = 'carnivore'
+caps$Body_mass[caps$Species == 'Varanus_salvator'] = 19.5
+caps$Body_mass[caps$Species == 'Varanus_nebulosus'] = 4.3
+```
+
+#Accounting for daylength variation
+
+Here, we will be using camera coordinates and Suntime () function to take into account of daylength variation. Since SEA is near the equator, it would not vary that much but its good practice to do this! The radian time produced is a relative value of both sunset and sunrise hours. For instance, if a certain camera location has a sunrise time of 0630 hr, the Suntime () function will regard it as 1.57 rad and vice versa for sunset time (4.71 rad). The radian time will be used to generate the kernel density curves later on.
+
+Before merging, let us do a check to see whether all cameras have been accounted for.
+
+```{r}
+#Select coordinate columns
+ECL_coords = covs %>% select(camera_id,Latitude,Longitude)
+
+#Check whether all cameras are accounted for
+setdiff(caps$camera_id, covs$camera_id) #All good!
+```
+Now, we will merge the coords dataframe with the captures dataframe.
+
+```{r}
+#Merge captures and camera coordinates into one single dataset
+caps <- merge(caps, coords, by = 'camera_id')
+```
+
+###Using the SunTime () function
+
+####Thailand surveys
+
+```{r}
+#Select Thailand surveys
+thai <-  filter(caps, survey_id %in% c('KhaoYai2019', 'KhaoChong2018'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(thai$Photo.Time, format = "%H:%M:%S", scale = c("radian"))
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(thai$Photo.Date, tz= "Asia/Bangkok", format = '%d/%m/%Y')
+
+# Create a SpatialPoints object with the location
+coords <- data.frame(thai$Longitude,thai$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+ 
+#Merge it with main thailand dataset
+thai$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+Now, we do the same for all the other surveys (i.e., Malaysia, Sumatra, Sinagpore)
+
+####Malaysian and Singapore surveys
+
+```{r}
+#Select Malaysian and Singapore surveys 
+my_sg <-  filter(caps, survey_id %in% c('Danum_Valley_2019a', 'Danum2018', 'Lambir2017', 'Pasoh_TEAM_2013', 'Pasoh_TEAM_2014', 'Pasoh_TEAM_2015', 'Pasoh_TEAM_2017', 'Singapore', 'Ulu_Muda_2015a', 'Ulu_Muda_2015b',
+'Ulu_Muda_2015c', 'Ulu_Muda_2015d', 'Ulu_Muda_2016a', 'Ulu_Muda_2016b', 'Ulu_Muda_2016c'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(my_sg$Photo.Time, format = "%H:%M:%S", scale = c("radian")) 
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(my_sg$Photo.Date, tz= "Asia/Singapore", format = '%d/%m/%Y')
+
+# Create a SpatialPoints object with the location
+coords <- data.frame(my_sg$Longitude,my_sg$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+
+#Merge it with main peninsular and singapore dataset
+my_sg$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+####Sumatran surveys
+
+```{r}
+#Select sumatran surveys
+sum <- filter(caps, survey_id %in% c('BBS', 'Kerinci', 'Leuser'))
+
+#create a vector containing time in radians which will be used in circular analyses later on
+time <- gettime(sum$Photo.Time, format = "%H:%M:%S", scale = c("radian")) 
+
+#Create a vector containing date in the correct format
+date <- as.POSIXct(sum$Photo.Date, tz= "Asia/Jakarta", format = '%d/%m/%Y')
+
+# Create a SpatialPoints object with the location
+coords <- data.frame(sum$Longitude,sum$Latitude)
+coords2 <- sp::SpatialPoints(coords, proj4string = sp::CRS("+epsg=4087 +proj=longlat +datum=WGS84"))
+
+#Correct for sunrise and sunset time based on lat and long
+st <- sunTime(time, date, coords2)
+
+#Merge it with main sumatra dataset
+sum$time.rad <- st
+
+#Keep environment clean!
+rm(coords,coords2,date,time,st)
+
+```
+
+Now, let us merge all the respective time zones together!
+
+```{r}
+#Rbind the datasets together
+caps <- rbind(my_sg, thai)
+caps <- rbind(caps, sum)
+
+#Keep environment clean!
+rm(my_sg, sum, thai)
+```
+
+#Including the disturbance proxy: Forest Landscape Integrity Index (FLII)
+
+Here, we will include the forest landscape integrity index (FLII) at each of our camera locations. The FLII values can be extracted from the [FLII database](https://www.forestintegrity.com/) 
+
+```{r}
+#Filter out other covariates and only include FLII
+covs <- covs %>% select(camera_id, survey_id, forest_integrity)
+
+#Include a FLII_status column to differentiate between degraded and intact camera locations
+covs$FLII_status <- "Degraded"
+covs$FLII_status[covs$forest_integrity > median(covs$forest_integrity)] = "Intact"
+
+#Check if all cameras are accounted for
+setdiff(caps$camera_id, covs$camera_id)
+setdiff(covs$camera_id, caps$camera_id) #All the cameras in captures are accounted for so all good!
+
+#Merge both captures and FLII
+caps <- merge(caps, covs, by = c('camera_id', 'survey_id'))
+
+#Keep environment clean!
+rm(covs)
+```
+
+We will also create a separate dataset here that defines the FLII status differently. We only select camera sites that have a FLII value at the upper and lower 25% of FLII distribution (at the extremes) across SEA and will then split the dataset again into their respective landscapes. Each landscape dataset will then be split again into 'Intact' and 'Degraded' status based on the upper and lower 25% FLII threshold of that landscape.
+
+```{r}
+#Call our current captures dataset to be 'caps_extreme' to differentiate from 'caps'
+caps_extreme <- caps
+
+#Check the FLII distribution across SEA
+hist(caps_extreme$forest_integrity) #Skewed towards higher intact forests
+
+#Only include cameras that are within the lower and upper 25% FLII threshold
+caps_extreme$FLII_status <- "NA"
+caps_extreme$FLII_status[caps_extreme$forest_integrity <= quantile(caps_extreme$forest_integrity,0.25)] = "degraded"
+caps_extreme$FLII_status[caps_extreme$forest_integrity >= quantile(caps_extreme$forest_integrity,0.75)] = "intact"
+caps_extreme <- caps_extreme %>% filter(FLII_status %in% c("degraded", "intact"))
+
+#Check what surveys are present
+sort(unique(caps_extreme$survey_id))
+
+#Create a landscape column for looping later
+caps_extreme$landscape <- 'NA'
+caps_extreme$landscape[caps_extreme$survey_id == "BBS"] = "Bukit_Barisan_Selatan"
+caps_extreme$landscape[caps_extreme$survey_id %in% c("Danum_Valley_2019a", "Danum2018")] = "Danum_valley"
+caps_extreme$landscape[caps_extreme$survey_id == "Kerinci"] = "Kerinci_Seblat"
+caps_extreme$landscape[caps_extreme$survey_id == "KhaoChong2018"] = "Khao_Chong"
+caps_extreme$landscape[caps_extreme$survey_id == "KhaoYai2019"] = "Khao_Yai"
+caps_extreme$landscape[caps_extreme$survey_id == "Lambir2017"] = "Lambir_Hills"
+caps_extreme$landscape[caps_extreme$survey_id == "Leuser"] = "Gunung_Leuser"
+caps_extreme$landscape[caps_extreme$survey_id %in% c("Pasoh_TEAM_2013", "Pasoh_TEAM_2014", "Pasoh_TEAM_2015", "Pasoh_TEAM_2017")] = "Pasoh_Forest_Reserve"
+caps_extreme$landscape[caps_extreme$survey_id %in% c("Ulu_Muda_2015a", "Ulu_Muda_2015b", "Ulu_Muda_2015c", "Ulu_Muda_2015d", "Ulu_Muda_2016a", "Ulu_Muda_2016b", "Ulu_Muda_2016c")] = "Ulu_Muda_Forest_reserve"
+caps_extreme$landscape[caps_extreme$survey_id == "Singapore"] = "Singapore"
+
+```
+
+#Create a dataset for community and guild-level analyses
+
+Here, we will create the dataset for the community and guild-level analyses. We will also be correcting some of the feeding guilds info of certain species as more recent research have provide further insight into their diets. Finally, we will determine the trophic guild of each species based on diet (i.e., carnivore, herbivore and omnivore) and body mass (i.e., small (<4kg), medium (4-20kg), large (>20kg))
+
+* [Macaque's diet](https://doi.org/10.1007/BF02696158)
+
+* [Bulwer's pheasant diet](https://press.princeton.edu/books/paperback/9780691161679/phillipps-field-guide-to-the-birds-of-borneo)
+
+```{r}
+#Standardise feeding guild column
+sort(unique(caps$Guild))
+caps$Guild[caps$Guild == 'frugivore'] = 'herbivore'
+caps$Guild[caps$Guild == 'insectivore'] = 'omnivore'
+caps$Guild[caps$Guild == 'picivore_carnivore'] = 'carnivore'
+caps$Guild[caps$Guild == 'Carnivore'] = 'carnivore'
+caps$Guild[caps$Guild == 'Herbivore'] = 'herbivore'
+caps$Guild[caps$Guild == 'herbivore?'] = 'herbivore'
+
+#Change the feeding guild of macaques to omnivores
+caps$Guild[caps$Species %in% c('Macaca_nemestrina', 'Macaca_arctoides')] = 'omnivore'
+
+#Change the feeding guild of Bulwer's pheasant to omnivore
+caps$Guild[caps$Species == 'Lophura_bulweri'] = 'omnivore'
+
+```
+
+Now, we will begin to determine the trophic guild of each species.
+
+```{r}
+#Create a column called 'trophic_guild'
+caps$trophic_guild = 'NA'
+
+#We will create a different dataframe here where we defined our body size categorisations differently
+caps2 = caps
+
+#Carnivore guilds
+caps$trophic_guild[caps$Guild == 'carnivore' & caps$Body_mass < 4] = 'small_carnivore'
+caps$trophic_guild[caps$Guild == 'carnivore' & caps$Body_mass >= 4 & caps$Body_mass <= 20] = 'medium_carnivore'
+caps$trophic_guild[caps$Guild == 'carnivore' & caps$Body_mass > 20] = 'large_carnivore'
+
+#Herbivore guilds
+caps$trophic_guild[caps$Guild == 'herbivore' & caps$Body_mass < 4] = 'small_herbivore'
+caps$trophic_guild[caps$Guild == 'herbivore' & caps$Body_mass >= 4 & caps$Body_mass <= 20] = 'medium_herbivore'
+caps$trophic_guild[caps$Guild == 'herbivore' & caps$Body_mass > 20] = 'large_herbivore'
+
+#Omnivore guilds
+caps$trophic_guild[caps$Guild == 'omnivore' & caps$Body_mass < 4] = 'small_omnivore'
+caps$trophic_guild[caps$Guild == 'omnivore' & caps$Body_mass >= 4 & caps$Body_mass <= 20] = 'medium_omnivore'
+caps$trophic_guild[caps$Guild == 'omnivore' & caps$Body_mass > 20] = 'large_omnivore'
+
+```
+
+Finally, let's save this dataset for our analyses later.
+
+```{r}
+#Select only the columns that we need
+names(caps)
+comm_guild <- select(caps, c('camera_id', 'survey_id', 'Species', 'time.rad', 'forest_integrity','FLII_status', 'Body_mass','trophic_guild'))
+
+#Save it!
+write.csv(comm_guild, 'SEA_Activity_comm_guild-level_analyses_20230912.csv', row.names = F)
+rm(comm_guild)
+```
+
+Let's repeat the same procedure for our captures dataset that are at the extremes.
+
+```{r}
+#Standardise feeding guild column
+sort(unique(caps_extreme$Guild))
+caps_extreme$Guild[caps_extreme$Guild == 'frugivore'] = 'herbivore'
+caps_extreme$Guild[caps_extreme$Guild == 'insectivore'] = 'omnivore'
+caps_extreme$Guild[caps_extreme$Guild == 'picivore_carnivore'] = 'carnivore'
+caps_extreme$Guild[caps_extreme$Guild == 'Carnivore'] = 'carnivore'
+caps_extreme$Guild[caps_extreme$Guild == 'Herbivore'] = 'herbivore'
+caps_extreme$Guild[caps_extreme$Guild == 'herbivore?'] = 'herbivore'
+
+#Change the feeding guild of macaques to omnivores
+caps_extreme$Guild[caps_extreme$Species %in% c('Macaca_nemestrina', 'Macaca_arctoides')] = 'omnivore'
+
+#Change the feeding guild of Bulwer's pheasant to omnivore
+caps_extreme$Guild[caps_extreme$Species == 'Lophura_bulweri'] = 'omnivore'
+
+#Create a column called 'trophic_guild'
+caps_extreme$trophic_guild = 'NA'
+
+#Carnivore guilds
+caps_extreme$trophic_guild[caps_extreme$Guild == 'carnivore' & caps_extreme$Body_mass < 4] = 'small_carnivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'carnivore' & caps_extreme$Body_mass >= 4 & caps_extreme$Body_mass <= 20] = 'medium_carnivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'carnivore' & caps_extreme$Body_mass > 20] = 'large_carnivore'
+
+#Herbivore guilds
+caps_extreme$trophic_guild[caps_extreme$Guild == 'herbivore' & caps_extreme$Body_mass < 4] = 'small_herbivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'herbivore' & caps_extreme$Body_mass >= 4 & caps_extreme$Body_mass <= 20] = 'medium_herbivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'herbivore' & caps_extreme$Body_mass > 20] = 'large_herbivore'
+
+#Omnivore guilds
+caps_extreme$trophic_guild[caps_extreme$Guild == 'omnivore' & caps_extreme$Body_mass < 4] = 'small_omnivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'omnivore' & caps_extreme$Body_mass >= 4 & caps_extreme$Body_mass <= 20] = 'medium_omnivore'
+caps_extreme$trophic_guild[caps_extreme$Guild == 'omnivore' & caps_extreme$Body_mass > 20] = 'large_omnivore'
+
+#Select only the columns that we need
+names(caps_extreme)
+comm_guild_extreme <- select(caps_extreme, c('camera_id', 'survey_id', 'Species', 'time.rad', 'forest_integrity', 'FLII_status', 'landscape', 'trophic_guild'))
+
+#Save it!
+write.csv(comm_guild_extreme,'SEA_Activity_dataset_for_community_guild-level_analyses_extremes_20230523.csv', row.names = F)
+rm(comm_guild_extreme)
+```
+
+###Create a supplementary table for our community and guild analyses
+
+Here, we will create a supplementary table consisting of sample size and guild information of all species involved in our community- and guild-level analyses. But first, let's include the total sample size of each species and the sample size of each species in both intact and degraded forests.
+
+```{r}
+#Calculate the total sample size and the sample size within each forest type
+comm_guild_supp <- caps %>%  
+  select(Species, FLII_status) %>% 
+  group_by(FLII_status) %>% 
+  dplyr::count(Species, name = 'total_detections') %>% 
+  pivot_wider(values_from = total_detections, names_from = FLII_status)
+
+#Replace NA with 0
+comm_guild_supp[is.na(comm_guild_supp)] <- 0
+
+#Calculate total detections
+comm_guild_supp <- comm_guild_supp %>% mutate(total_detection = Degraded + Intact)
+
+```
+
+Next, let's include the common_names of each species.
+
+```{r}
+#First, let's sort the common_names dataframe to better merge it with the comm_guild dataframe later
+colnames(common_names) <- c('common_name', 'Species')#Change the column names so that we can easily merge them!
+
+#Remove duplicate names
+common_names <- common_names[!duplicated(common_names$Species),]
+
+#Check which species are missing from the common_names dataframe
+setdiff(caps$Species, common_names$Species)# We are missing Ratufa_bicolor and Arctonyx_hoevenii
+
+#Create a new dataframe to address missing names by binding it later
+missing_names <- data.frame(common_name = c("Black_giant_squirrel",  "Sumatran_hog_badger"), 
+                            Species = c("Ratufa_bicolor", "Arctonyx_hoevenii")) #Address missing names!
+
+#Bind it to the common_names dataframe
+common_names <- rbind(common_names, missing_names) 
+
+#Merge the common_name dataframe with the comm_guild dataframe
+comm_guild_supp <- merge(comm_guild_supp, common_names, by = 'Species')
+
+#Keep environment clean!
+rm(missing_names)
+
+```
+
+To be more thorough, let's also include the guild information, conservation status and the number of landscapes detected for each species. We will first extract the guild information from our captures dataset.
+
+```{r}
+#Extract guild info from the captures dataset
+guild_info <- select(caps, c('Species', 'Guild', 'Body_mass', 'trophic_guild'))
+
+#Merge it with the comm_guild_supp dataset
+comm_guild_supp <- merge(comm_guild_supp, guild_info, by = 'Species')
+
+#Remove duplicate lines
+comm_guild_supp <- comm_guild_supp[!duplicated(comm_guild_supp$Species),]
+
+#Keep environment clean
+rm(guild_info)
+```
+
+Next, let's include the conservation status of each species.
+
+```{r}
+#Load in the conservation status info dataset into r
+iucn <- as.data.frame(read.csv('Species_info-20220512.csv'))
+names(iucn)
+
+#Select only the columns that we need 
+iucn <- select(iucn, c('genus_species', 'IUCN'))
+
+#Check if all species are accounted for
+setdiff(comm_guild_supp$Species, iucn$genus_species) #All good!
+
+#Change the column names of iucn dataset for merging later
+colnames(iucn) <- c('Species', 'IUCN')
+
+#Merge both datasets
+comm_guild_supp <- merge(comm_guild_supp, iucn, by = 'Species')
+
+#There is NAs in the IUCN column. Let's address them!
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Lophura_bulweri'] = 'VU'
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Nisaetus_cirrhatus'] = 'LC'
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Tragulus_sp.'] = 'LC'
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Trichys_fasciculata'] = 'LC'
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Varanus_nebulosus'] = 'NT'
+comm_guild_supp$IUCN[comm_guild_supp$Species == 'Varanus_salvator'] = 'LC'
+#If you want to check whether your dataset have any NAs, you can use the is.na () function
+
+```
+
+Here, we will include the number of landscapes detected for each species.
+
+```{r}
+#First, let's create a capture dataset with landscapes
+land <- select(caps, c('survey_id', 'Species'))
+land$landscape = 'NA'
+sort(unique(land$survey_id))
+land$landscape[land$survey_id %in% c('Pasoh_TEAM_2013', 'Pasoh_TEAM_2014', 'Pasoh_TEAM_2015', 'Pasoh_TEAM_2017')] = 'Pasoh_forest_reserve'
+land$landscape[land$survey_id %in% c('Ulu_Muda_2015a', 'Ulu_Muda_2015b', 'Ulu_Muda_2016b', 'Ulu_Muda_2016c','Ulu_Muda_2016a', 'Ulu_Muda_2015c', 'Ulu_Muda_2015d')] = 'Ulu_Muda_forest_reserve'
+land$landscape[land$survey_id %in% c('Danum_Valley_2019a', 'Danum2018')] = 'Danum_Valley'
+land$landscape[land$survey_id == 'BBS'] = 'Bukit_barisan_selatan'
+land$landscape[land$survey_id == 'Kerinci'] = 'Kerinci_seblat'
+land$landscape[land$survey_id == 'Leuser'] = 'Gunung_leuser'
+land$landscape[land$survey_id == 'Lambir2017'] = 'Lambir_hills'
+land$landscape[land$survey_id == 'KhaoChong2018'] = 'Khao_Chong'
+land$landscape[land$survey_id == 'KhaoYai2019'] = 'Khao_Yai'
+
+#Check the number of landscapes present (*There should be 10 landscapes)
+sort(unique(land$landscape))
+
+#We will use the ddply in the plyr package to calculate the number of landscapes detected
+landscape_detected <- ddply(land, .(Species), summarize, landscape_detected = length(unique(landscape)))
+
+#Merge it with the comm_guild_supp dataset
+comm_guild_supp <- merge(comm_guild_supp, landscape_detected, by = 'Species')
+
+#Keep environment clean!
+rm(land, landscape_detected)
+```
+
+Finally, we can save the dataframe.
+
+```{r}
+write.csv(comm_guild_supp, 'SEA_Activity_community_guild-level_supplementary_20230307.csv', row.names = F)
+```
+
+Let's repeat the same procedure for captures dataset that is at the extremes
+
+```{r}
+#Calculate the total sample size and the sample size within each forest type
+comm_guild_supp_extreme <- caps_extreme %>%  
+  select(Species, FLII_status) %>% 
+  group_by(FLII_status) %>% 
+  dplyr::count(Species, name = 'total_detections') %>% 
+  pivot_wider(values_from = total_detections, names_from = FLII_status)
+
+#Replace NA with 0
+comm_guild_supp_extreme[is.na(comm_guild_supp_extreme)] <- 0
+
+#Calculate total detections
+comm_guild_supp_extreme <- comm_guild_supp_extreme %>% mutate(total_detection = degraded + intact)
+
+#First, let's sort the common_names dataframe to better merge it with the comm_guild dataframe later
+colnames(common_names) <- c('common_name', 'Species')#Change the column names so that we can easily merge them!
+
+#Remove duplicate names
+common_names <- common_names[!duplicated(common_names$Species),]
+
+#Check which species are missing from the common_names dataframe
+setdiff(comm_guild_supp_extreme$Species, common_names$Species)# We are missing none
+
+#Check if all species are accounted for
+setdiff(comm_guild_supp_extreme$Species, iucn$genus_species) #All good!
+
+#Change the column names of iucn dataset for merging later
+colnames(iucn) <- c('Species', 'IUCN')
+
+#Merge both datasets
+comm_guild_supp_extreme <- merge(comm_guild_supp_extreme, iucn, by = 'Species')
+
+#There is NAs in the IUCN column. Let's address them!
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Lophura_bulweri'] = 'VU'
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Nisaetus_cirrhatus'] = 'LC'
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Tragulus_sp.'] = 'LC'
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Trichys_fasciculata'] = 'LC'
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Varanus_nebulosus'] = 'NT'
+comm_guild_supp_extreme$IUCN[comm_guild_supp_extreme$Species == 'Varanus_salvator'] = 'LC'
+#If you want to check whether your dataset have any NAs, you can use the is.na () function
+
+#Keep environment clean!
+rm(iucn)
+
+#Check the number of landscapes present (*There should be 10 landscapes)
+sort(unique(caps_extreme$landscape))
+
+#We will use the ddply in the plyr package to calculate the number of landscapes detected
+landscape_detected <- ddply(caps_extreme, .(Species), summarize, landscape_detected = length(unique(landscape)))
+
+#Merge it with the comm_guild_supp dataset
+comm_guild_supp_extreme <- merge(comm_guild_supp_extreme, landscape_detected, by = 'Species')
+
+#Keep environment clean!
+rm(land, landscape_detected)
+
+#Save it!
+write.csv(comm_guild_supp_extreme, 'SEA_Activity_community_guild-level_supplementary_extremes_20230523.csv', row.names = F)
+```
+
+#Create a dataset for species-level temporal and species overlap analyses
+
+Now, for species-level temporal analyses, we will need to select species with >= 20 detections in both intact and degraded forests. This is to prevent zero errors and provide accuracy to our analyses. First, we will check which species is going to be selected by using the comm_guild_supp dataframe from before.
+
+```{r}
+#Lets filter out species that have < 20 detections in both intact and degraded forests
+sp_supp = filter(comm_guild_supp, Degraded >= 20, Intact >= 20)
+
+#Save this for the species-level
+write.csv(sp_supp, 'SEA_Activity_species-level_supplementary_20230307.csv', row.names = F)
+```
+
+Now, we can create a dataframe for our species-level analyses
+
+```{r}
+#Check which species are present
+sort(unique(sp_supp$Species))
+
+#Select the species that meets the requirement
+sp <- filter(comm_guild, Species %in% c('Argusianus_argus', 'Atherurus_macrourus', 'Echinosorex_gymnura', 'Helarctos_malayanus', 'Hemigalus_derbyanus', 'Hystrix_brachyura', 'Hystrix_crassispinis', 'Lophura_ignita', 'Macaca_nemestrina', 'Martes_flavigula', 'Muntiacus_muntjak', 'Neofelis_nebulosa', 'Paguma_larvata', 'Panthera_tigris', 'Paradoxurus_hermaphroditus', 'Prionailurus_bengalensis', 'Prionodon_linsang', 'Rusa_unicolor', 'Sus_barbatus', 'Sus_scrofa', 'Tapirus_indicus', 'Tragulus_sp.', 'Trichys_fasciculata'))
+
+#Let's save this as our species-level dataset
+write.csv(sp, 'SEA_Activity_dataset_for_species-level_analyses_20230307.csv', row.names = F)
+
+#Keep environment clean
+rm(comm_guild, comm_guild_supp, sp, sp_supp)
+```
+
+Let's repeat the same procedure for our other dataset (quartiles split).
+
+```{r}
+#Lets filter out species that have < 20 detections in both intact and degraded forests
+sp_supp_extreme = filter(comm_guild_supp_extreme, degraded >= 20, intact >= 20)
+
+#Save this for the species-level
+write.csv(sp_supp_extreme, 'SEA_Activity_species-level_supplementary_extreme_20230523.csv', row.names = F)
+
+#Check which species are present
+sort(unique(sp_supp_extreme$Species))
+
+#Select the species that meets the requirement
+sp_extreme <- filter(comm_guild_extreme, Species %in% c('Argusianus_argus', 'Atherurus_macrourus', 'Helarctos_malayanus', 'Hystrix_brachyura', 'Macaca_nemestrina', 'Muntiacus_muntjak', 'Prionailurus_bengalensis', 'Rusa_unicolor', 'Sus_scrofa', 'Tapirus_indicus', 'Tragulus_sp.'))
+
+#Let's save this as our species-level dataset
+write.csv(sp_extreme, 'SEA_Activity_dataset_for_species-level_analyses_extreme_20230523.csv', row.names = F)
+
+#Keep environment clean
+rm(comm_guild_extreme, comm_guild_supp_extreme, sp_extreme, sp_supp_extreme)
+
+```
+
+In conclusion, after filtering all the unwanted species, we are left with 31138 total detections, encompassing 63 different species. For our species-level analyses, we are left with 29879 total detections, encompassing over 23 different species. Now, we can begin to analyse the respective datasets.
